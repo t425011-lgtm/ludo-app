@@ -1,0 +1,126 @@
+body {
+  text-align: center;
+  font-family: "Arial Rounded MT Bold", "Hiragino Maru Gothic ProN", sans-serif;
+  background: linear-gradient(135deg, #8de36f, #55b84d);
+  margin: 0;
+  padding: 20px;
+}
+
+/* ターン表示 */
+#turn-box {
+  font-size: 32px;
+  padding: 15px;
+  background: white;
+  border-radius: 15px;
+  width: 60%;
+  margin: 20px auto;
+  border: 3px solid #333;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+}
+
+/* バフ表示 */
+#buff-box {
+  font-size: 26px;
+  color: #ff3333;
+  font-weight: bold;
+  margin-bottom: 15px;
+  height: 30px;
+}
+
+/* サイコロ数変更ボタン */
+.ctrl {
+  font-size: 25px;
+  width: 55px;
+  height: 55px;
+  border-radius: 10px;
+  border: none;
+  background: #ffaa00;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+  transition: 0.15s;
+}
+.ctrl:hover {
+  background: #ffcc33;
+  transform: translateY(-3px);
+}
+
+/* 汎用ボタン */
+button {
+  font-size: 22px;
+  padding: 12px 25px;
+  margin: 12px;
+  border: none;
+  border-radius: 12px;
+  background: #3366ff;
+  color: white;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+  transition: 0.2s;
+}
+button:hover {
+  background: #5a85ff;
+  transform: translateY(-3px);
+}
+
+/* サイコロ画像 */
+#dice-area img {
+  width: 120px;
+  margin: 10px;
+  filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.3));
+}
+
+/* イベントカード */
+#event-box {
+  margin-top: 30px;
+  padding: 25px;
+  border-radius: 15px;
+  width: 80%;
+  background: white;
+  font-size: 26px;
+  margin-left: auto;
+  margin-right: auto;
+  border: 3px solid #444;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  min-height: 80px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 区切り線 */
+hr {
+  border: none;
+  height: 2px;
+  background: #2e6f21;
+  width: 80%;
+  margin: 40px auto;
+}
+
+/* スマホ対応 */
+@media screen and (max-width: 600px) {
+  #turn-box {
+    width: 90%;
+    font-size: 24px;
+  }
+
+  #event-box {
+    width: 95%;
+    font-size: 22px;
+  }
+
+  #dice-area img {
+    width: 90px;
+  }
+
+  .ctrl {
+    width: 45px;
+    height: 45px;
+  }
+
+  button {
+    font-size: 18px;
+    padding: 10px 15px;
+  }
+}
