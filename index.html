@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ludo Tycoon - Event & Money Game</title>
+<link href="https://fonts.googleapis.com/css2?family=M+PLUS+Rounded+1c:wght@400;800&family=Rowdies:wght@700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* 深緑ベースに、少しリッチなゴールドのニュアンスを追加 */
+    --bg-gradient: radial-gradient(circle at center, #1b5e20, #0d2e10);
+    --glass-bg: rgba(20, 40, 20, 0.4);
+    --glass-border: rgba(255, 235, 59, 0.3);
+    --accent: #ffd700; /* ゴールド */
+    --text: #fff;
+  }
+  
+  body {
+    margin: 0;
+    height: 100vh;
+    background: var(--bg-gradient);
+    font-family: 'M PLUS Rounded 1c', sans-serif;
+    color: var(--text);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+
+  /* 背景のエフェクト（紙吹雪のようなパーティクル） */
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background-image: 
+      radial-gradient(#ffd700 1px, transparent 1px),
+      radial-gradient(#ffffff 1px, transparent 1px);
+    background-size: 50px 50px, 30px 30px;
+    background-position: 0 0, 15px 15px;
+    opacity: 0.1;
+    z-index: -1;
+    animation: moveBg 30s linear infinite;
+  }
+  @keyframes moveBg { from { transform: translateY(0); } to { transform: translateY(60px); } }
+
+  .container {
+    text-align: center;
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    padding: 60px 40px;
+    border-radius: 30px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    border: 2px solid var(--glass-border);
+    width: 90%;
+    max-width: 500px;
+    animation: popIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+    position: relative;
+  }
+  @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+  /* ロゴデザイン */
+  .logo {
+    font-family: 'Rowdies', cursive;
+    font-size: 58px;
+    margin: 0;
+    background: linear-gradient(to bottom, #ffd700, #ff8f00);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    filter: drop-shadow(0 4px 0 #3e2723);
+    line-height: 1.1;
+    margin-bottom: 5px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+  
+  .sub-title {
+    font-size: 16px;
+    color: #c8e6c9;
+    margin-bottom: 40px;
+    letter-spacing: 3px;
+    font-weight: 800;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+  }
+
+  /* 3Dサイコロのアニメーションアイコン */
+  .dice-obj {
+    font-size: 70px;
+    margin-bottom: 15px;
+    display: inline-block;
+    animation: bounce 2s infinite ease-in-out;
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.5));
+  }
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0) rotate(-5deg); }
+    50% { transform: translateY(-15px) rotate(5deg); }
+  }
+
+  .menu {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .btn {
+    text-decoration: none;
+    padding: 20px 0;
+    border-radius: 50px;
+    font-size: 20px;
+    font-weight: 800;
+    transition: transform 0.2s, filter 0.2s;
+    display: block;
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    letter-spacing: 1px;
+  }
+  
+  /* スタートボタン */
+  .btn-start {
+    background: linear-gradient(135deg, #ffeb3b, #fbc02d);
+    color: #3e2723;
+    box-shadow: 0 6px 0 #f57f17, 0 10px 20px rgba(0,0,0,0.3);
+    border: 2px solid #fffde7;
+  }
+  
+  /* ルールボタン */
+  .btn-rule {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    border: 2px solid rgba(255,255,255,0.3);
+    box-shadow: 0 4px 0 rgba(255,255,255,0.1);
+    font-size: 18px;
+    padding: 16px 0;
+  }
+
+  .btn:hover { transform: translateY(-3px); filter: brightness(1.1); }
+  .btn:active { transform: translateY(2px); box-shadow: none; }
+
+  /* ボタンのキラリと光るエフェクト */
+  .btn::after {
+    content: "";
+    position: absolute;
+    top: 0; left: -100%;
+    width: 100%; height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.6), transparent);
+    transition: 0.5s;
+  }
+  .btn:hover::after { left: 100%; }
+
+  footer {
+    margin-top: 40px;
+    font-size: 11px;
+    color: #a5d6a7;
+    opacity: 0.8;
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <div class="dice-obj">🎲</div>
+  <h1 class="logo">LUDO TYCOON</h1>
+  <p class="sub-title">Event & Money Board Game</p>
+
+  <div class="menu">
+    <a href="game.html" class="btn btn-start">▶ ゲームスタート</a>
+    <a href="rules.html" class="btn btn-rule">📖 ルールを見る</a>
+  </div>
+
+  <footer>
+    © 2025 Ludo Tycoon Project
+  </footer>
+</div>
+
+</body>
+</html>
