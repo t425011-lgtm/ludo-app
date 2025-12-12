@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>ゲームルール説明書</title>
+<style>
+  :root {
+    --primary: #7bd24a;
+    --accent: #ff9800;
+    --text: #333;
+    --bg: #f4f9f4;
+    --card-bg: #fff;
+    --shadow: 0 4px 15px rgba(0,0,0,0.1);
+  }
+  body {
+    margin: 0;
+    font-family: "Helvetica Neue", Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+  }
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: var(--primary);
+    color: #fff;
+    border-radius: 15px;
+    box-shadow: var(--shadow);
+  }
+  h1 { margin: 0; font-size: 24px; }
+  .subtitle { font-size: 14px; opacity: 0.9; margin-top: 5px; }
+  
+  h2 {
+    border-left: 6px solid var(--primary);
+    padding-left: 12px;
+    margin-top: 0;
+    font-size: 20px;
+    color: #2e7d32;
+  }
+  .card {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+  }
+  
+  /* ボーナス表示用のスタイル */
+  .bonus-box {
+    background: #fff8e1;
+    border: 2px solid #ffb74d;
+    border-radius: 8px;
+    padding: 15px;
+    margin-top: 15px;
+  }
+  .bonus-heading {
+    color: #ef6c00;
+    font-weight: bold;
+    font-size: 1.1em;
+    margin-bottom: 8px;
+    display: block;
+    border-bottom: 1px dashed #ffb74d;
+    padding-bottom: 5px;
+  }
+  .rank-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #fff;
+    margin-top: 8px;
+  }
+  .rank-table th, .rank-table td {
+    border: 1px solid #ffe0b2;
+    padding: 8px;
+    text-align: center;
+  }
+  .rank-table th { background: #ffe0b2; color: #e65100; }
+  .rank-1 { color: #d32f2f; font-weight: bold; font-size: 1.2em; }
+
+  /* ルドーの図解風スタイル */
+  .ludo-rule-box {
+    background: #e8f5e9;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 10px 0;
+  }
+  .rule-icon { font-size: 24px; vertical-align: middle; margin-right: 8px; }
+  
+  ul, ol { padding-left: 20px; }
+  li { margin-bottom: 8px; }
+  strong { color: #d32f2f; }
+  
+  /* アイテムリスト */
+  .item-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  @media(max-width:600px){ .item-list{ grid-template-columns: 1fr; } }
+
+  .item {
+    border: 2px solid #eee;
+    padding: 10px;
+    border-radius: 8px;
+  }
+  .item-name { font-weight: bold; color: #9c27b0; }
+  .item-price { color: #e91e63; font-weight: bold; float: right; }
+  .item-desc { font-size: 13px; color: #666; margin-top: 4px; }
+  
+  /* 経済状況の色分け */
+  .eco-badge {
+    display: inline-block;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-weight: bold;
+    color: #fff;
+    font-size: 12px;
+    margin-right: 6px;
+  }
+  .eco-normal { background: #7bd24a; }
+  .eco-inf { background: #ffeb3b; color: #333; }
+  .eco-def { background: #cfd8dc; color: #333; }
+  .eco-burst { background: #7b1fa2; }
+
+  .back-btn {
+    display: block;
+    width: 100%;
+    padding: 15px;
+    background: #333;
+    color: #fff;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 10px;
+    font-weight: bold;
+    margin-top: 40px;
+  }
+  .back-btn:hover { opacity: 0.9; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <header>
+    <h1>🎲 ルドー × イベントマネーゲーム</h1>
+    <div class="subtitle">ハイブリッドルールブック</div>
+  </header>
+
+  <section class="card">
+    <h2>🏆 勝利条件とボーナス</h2>
+    <p>4つのコマ全てを、自分の色のホーム列（ゴール）に入れることを目指します。</p>
+
+    <div class="bonus-box">
+      <span class="bonus-heading">🚩 ゴール到達ボーナス</span>
+      コマが1つホーム列に入るたびに、以下の金額を獲得します。
+      <div style="font-size:1.5em; text-align:center; color:#d32f2f; margin:10px 0; font-weight:bold;">
+        $8,000 獲得
+      </div>
+      <small>※アプリの金額パネル（+1000など）を使って<strong>手動で増やしてください</strong>。</small>
+    </div>
+
+    <div class="bonus-box">
+      <span class="bonus-heading">👑 順位確定ボーナス（上がり）</span>
+      ホーム列を最初に埋めた人から順に、以下の追加ボーナスを獲得します。
+      <table class="rank-table">
+        <tr>
+          <th>順位</th>
+          <th>ボーナス金額</th>
+        </tr>
+        <tr>
+          <td class="rank-1">1位</td>
+          <td class="rank-1">+$10,000</td>
+        </tr>
+        <tr>
+          <td>2位</td>
+          <td>+$8,000</td>
+        </tr>
+        <tr>
+          <td>3位</td>
+          <td>+$5,000</td>
+        </tr>
+        <tr>
+          <td>4位</td>
+          <td>+$2,000</td>
+        </tr>
+      </table>
+      <small>※順位が決まったら、金額パネルで<strong>手動で追加してください</strong>。</small>
+    </div>
+
+    <hr style="border:0; border-top:1px dashed #ccc; margin:20px 0;">
+
+    <ul>
+      <li><strong>資産王:</strong> 全員がゴールするか規定ターン終了時に<strong>最も所持金が多い人</strong>が最終的な勝者です。（早く上がってもお金がなければ負けです！）</li>
+      <li><strong>⚠️ 失格（ゲームオーバー）:</strong> 所持金が <strong>$0以下</strong> になると破産となり、ゲームから即脱落します。</li>
+    </ul>
+  </section>
+
+  <section class="card">
+    <h2>🎲 ルドー（盤面）の基本ルール</h2>
+    <p>このゲームは、物理的なボードゲーム「ルドー」のルールに従ってコマを進めます。</p>
+
+    <div class="ludo-rule-box">
+      <span class="rule-icon">🏠</span> <strong>スタート（出庫）</strong><br>
+      最初はコマを「ベース（待機所）」に置きます。<br>
+      サイコロで <strong>「6」</strong> が出た時だけ、コマを1つスタート地点（矢印のマス）に出すことができます。
+    </div>
+
+    <div class="ludo-rule-box">
+      <span class="rule-icon">🏃</span> <strong>移動と「6」のボーナス</strong><br>
+      <ul>
+        <li>時計回りにコマを進めます。</li>
+        <li><strong>「6」が出たらもう一度サイコロを振れます！</strong></li>
+      </ul>
+    </div>
+
+    <div class="ludo-rule-box">
+      <span class="rule-icon">💥</span> <strong>キャプチャ（激突）</strong><br>
+      自分のコマが、<strong>他のプレイヤーのコマがあるマスに重なって止まった場合</strong>、相手のコマをベース（待機所）に強制送還できます！<br>
+      <small>※「安全地帯（セーフティマス）」がある場合、そこでは重なってもOKです。</small>
+    </div>
+
+    <div class="ludo-rule-box">
+      <span class="rule-icon">🏁</span> <strong>ゴール条件</strong><br>
+      ボードを一周して自分の色のホーム列に入ります。<br>
+      ゴールするには、<strong>サイコロの目がピッタリ</strong>でなければなりません。<br>
+      <small>（例：あと2マスでゴールなら、2を出さないと入れず、余った分は跳ね返るか動けません）</small>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>📱 アプリ（デジタル）の使い方</h2>
+    <p>このゲームの「お金」「サイコロ」「イベント」は全てアプリが管理します。</p>
+    <ol>
+      <li>自分の番になったら、画面の<strong>「🎲 サイコロを振る」</strong>を押す。</li>
+      <li>出た目の数だけ、<strong>手動で</strong>ボード上のコマを動かす。</li>
+      <li>ボード上の<strong>イベントマス（!マーク）</strong>に止まったら、画面の<strong>「⚡ イベント開始」</strong>を押す。</li>
+      <li>コマがゴールしたら、画面右下の金額パネルで<strong>手動で +$8000</strong> する。</li>
+      <li>全てゴールしたら、順位に応じたボーナスを<strong>手動で追加</strong>する。</li>
+      <li>終わったら<strong>「ターン終了」</strong>を押して次の人へ。</li>
+    </ol>
+  </section>
+
+  <section class="card">
+    <h2>🛒 アイテムショップ</h2>
+    <p>自分のターンに<strong>「ショップ」</strong>ボタンから、アイテムを購入して有利に進めます。</p>
+    <div class="item-list">
+      <div class="item">
+        <span class="item-name">👟 スニーカー</span>
+        <span class="item-price">$400</span>
+        <div class="item-desc">次のサイコロの目が <strong>+1</strong> されます。</div>
+      </div>
+      <div class="item">
+        <span class="item-name">🚀 ロケット</span>
+        <span class="item-price">$1000</span>
+        <div class="item-desc">次のサイコロの目が <strong>+3</strong> されます。</div>
+      </div>
+      <div class="item">
+        <span class="item-name">💊 万能薬</span>
+        <span class="item-price">$300</span>
+        <div class="item-desc">「1回休み」や「逆走」の状態異常を回復します。</div>
+      </div>
+      <div class="item">
+        <span class="item-name">📡 妨害電波</span>
+        <span class="item-price">$600</span>
+        <div class="item-desc">指定したプレイヤー1人を強制的に<strong>「1回休み」</strong>にします。</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <h2>📈 経済変動（ワールドイベント）</h2>
+    <p>ターン終了時、一定確率で景気が変動します。背景色が変わったら注意！</p>
+    
+    <ul>
+      <li>
+        <span class="eco-badge eco-normal">☀️ 平穏</span>
+        <strong>通常状態:</strong> 変化なし。
+      </li>
+      <li>
+        <span class="eco-badge eco-inf">📈 インフレ</span>
+        <strong>好景気 (金):</strong> イベントでの獲得・没収金額が<strong>2倍</strong>になります。
+      </li>
+      <li>
+        <span class="eco-badge eco-def">📉 デフレ</span>
+        <strong>不景気 (灰):</strong> イベントでの金額変動がすべて<strong>半分</strong>になります。
+      </li>
+      <li>
+        <span class="eco-badge eco-burst">😱 バブル崩壊</span>
+        <strong>大暴落 (紫):</strong> 
+        <ul>
+          <li>サイコロの出目が常に <strong>-1</strong> されます。</li>
+          <li>毎ターン終了時、全員の所持金が <strong>10%消滅</strong> します。</li>
+        </ul>
+      </li>
+    </ul>
+  </section>
+
+  <a href="game.html" class="back-btn">ゲーム画面に戻る</a>
+
+</div>
+
+</body>
+</html>
