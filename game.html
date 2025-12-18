@@ -1,0 +1,1255 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>4人サイコロゲーム 完全版（合計値表示機能付き）</title>
+<style>
+  .money-particle {
+  position: fixed;
+  pointer-events: none;
+  font-size: 40px;
+  font-weight: 900;
+  z-index: 9999;
+  animation: floatUp 1.2s ease-out forwards;
+  text-shadow: 2px 2px 0 #000, -2px -2px 0 #000, 2px -2px 0 #000, -2px 2px 0 #000;
+}
+
+@keyframes floatUp {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(-120px); opacity: 0; }
+}
+:root{
+  --bg:#7bd24a; --card:#fff; --muted:#666; --shadow:0 8px 20px rgba(0,0,0,0.18);
+}
+/* 背景色のアニメーション */
+body{height:100%;margin:0;font-family:"Helvetica Neue",Arial,sans-serif;transition: background 0.8s ease; transition: background 1s ease;}
+
+.wrap{max-width:1100px;margin:0 auto;padding:18px;display:flex;flex-direction:column;min-height:100%;}
+.players{display:flex;gap:10px;justify-content:space-between;margin-bottom:12px;}
+.player{flex:1;padding:12px;border-radius:12px;background:linear-gradient(180deg,#fff,#f0f0f0);box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;transition:transform .18s;text-align:center; position: relative;}
+.player.current{outline:4px solid rgba(0,0,0,0.06);transform:translateY(-6px);}
+
+/* ゴール済みプレイヤーのスタイル */
+.player.finished { opacity: 0.7; background: #ddd; }
+.player.finished::after { content: "GOAL"; position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-15deg); font-size: 40px; font-weight: 800; color: rgba(255,0,0,0.3); border: 4px solid rgba(255,0,0,0.3); padding: 5px 20px; border-radius: 10px; pointer-events: none;}
+
+.player .name{font-weight:800;margin-bottom:6px;}
+.player .meta{font-size:13px;color:var(--muted);}
+.player .buff{margin-top:8px;color:#b12727;font-weight:700;}
+.player.lost{opacity:0.4;text-decoration:line-through;}
+.p1{background:linear-gradient(180deg,#ff3131,#fff);}
+.p2{background:linear-gradient(180deg,#38b6ff,#fff);}
+.p3{background:linear-gradient(180deg,#7ed957,#fff);}
+.p4{background:linear-gradient(180deg,#ffde59,#fff);}
+.main-grid{display:grid;grid-template-columns:1fr 380px;gap:18px;align-items:start;}
+.board{display:flex;flex-direction:column;align-items:center;padding:12px;}
+.dice-box{width:260px;height:160px;border-radius:14px;background:var(--card);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;position:relative;}
+.dice-images{display:flex;gap:10px;align-items:center;justify-content:center;}
+.dice-images img{width:80px;height:80px;object-fit:contain;transition:transform .45s ease;}
+.controls{display:flex;gap:12px;align-items:center;margin-top:14px;flex-wrap:wrap;justify-content:center;}
+
+/* === 追加されたスタイル === */
+#dice-sum {
+  margin-top: 10px;
+  font-size: 28px;
+  font-weight: 900;
+  color: #333;
+  padding: 5px 15px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.7);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+/* ======================== */
+
+.icon-btn{width:44px;height:44px;border-radius:8px;border:0;background:#f3f3f3;font-size:20px;display:flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,0.08);}
+.big-btn{height:48px;padding:0 20px;border-radius:12px;border:0;background:#fff;font-weight:800;box-shadow:var(--shadow);cursor:pointer;}
+
+/* ボタン無効化時のスタイル */
+button:disabled {
+  background: #ccc !important;
+  color: #888 !important;
+  cursor: not-allowed !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* ボタンの色分け */
+.shop-btn{background:#9c27b0; color:#fff;} 
+.goal-btn{background:#ff9800; color:#fff;}
+.finish-btn{background:#f44336; color:#fff;}
+
+.event-card{border-radius:12px;background:linear-gradient(180deg,#fff8d9,#fff);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;padding:14px;font-size:16px;color:#222;transition:transform .25s,opacity .25s;}
+.event-card.hidden{opacity:0;transform:translateY(12px);pointer-events:none;}
+.event-label{font-weight:800;margin-right:10px;color:#b27b00;}
+.event-sub{font-size:14px;color:var(--muted);}
+.money-panel{background:linear-gradient(180deg,#fff,#f7f7f7);border-radius:12px;padding:12px;box-shadow:var(--shadow);display:flex;flex-direction:column;gap:10px;}
+.person-money{display:flex;align-items:center;gap:12px;padding:10px;border-radius:10px;}
+.name-input{border-radius:8px;border:1px solid #ddd;padding:6px 8px;font-weight:700;}
+.total{font-size:18px;font-weight:800;margin-top:6px;}
+.color-bar{width:14px;height:48px;border-radius:6px;margin-right:6px;}
+.money-buttons{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;}
+.money-buttons button{padding:4px 8px;border-radius:6px;border:0;background:#f0f0f0;font-weight:700;cursor:pointer;transition:0.2s;}
+.money-buttons button:hover{background:#ddd;}
+#quiz-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;z-index:999;}
+#quiz-box{background:#fff;padding:24px;border-radius:16px;max-width:600px;width:90%;text-align:center;box-shadow:0 8px 20px rgba(0,0,0,0.3);}
+#quiz-box h2{margin-bottom:16px;font-size:20px;}
+#quiz-options{display:flex;flex-direction:column;gap:10px;margin-top:12px;}
+#quiz-options button{padding:12px;border-radius:10px;border:0;background:#f0f0f0;font-weight:700;cursor:pointer;transition:0.2s;}
+#quiz-options button:hover{background:#ddd;}
+#quiz-result{margin-top:16px;font-weight:800;font-size:18px;}
+#quiz-ok{margin-top:16px;padding:10px 20px;border-radius:12px;border:0;background:#4CAF50;color:#fff;font-weight:800;cursor:pointer;display:none;}
+#winner-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;z-index:1000;}
+#winner-box{background:#fff;padding:32px;border-radius:16px;max-width:500px;width:90%;text-align:center;box-shadow:0 8px 20px rgba(0,0,0,0.3);}
+#winner-box h2{font-size:28px;margin-bottom:16px;}
+#winner-box button{padding:12px 20px;border-radius:12px;border:0;background:#4CAF50;color:#fff;font-weight:800;cursor:pointer;}
+
+/* ショップモーダル用CSS */
+#shop-modal{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;z-index:999;}
+#shop-box{background:#fff;padding:24px;border-radius:16px;max-width:600px;width:90%;box-shadow:0 8px 20px rgba(0,0,0,0.3);}
+#shop-box h2{margin-bottom:16px;font-size:20px; text-align:center; color:#9c27b0;}
+.shop-list{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+.shop-item{border:2px solid #eee; border-radius:10px; padding:10px; display:flex; flex-direction:column; align-items:center; text-align:center;}
+.shop-item h3{margin:5px 0; font-size:16px;}
+.shop-item p{font-size:12px; color:#666; height:30px;}
+.shop-price{font-weight:800; color:#e91e63; margin-bottom:8px;}
+.shop-buy-btn{padding:8px 16px; border-radius:8px; border:none; background:#9c27b0; color:#fff; font-weight:700; cursor:pointer;}
+.shop-buy-btn:disabled{background:#ccc; cursor:not-allowed;}
+#shop-close{margin-top:16px; width:100%; padding:10px; border-radius:10px; border:none; background:#666; color:#fff; font-weight:700; cursor:pointer;}
+.target-btn{background:#e91e63; margin-top:5px; padding:10px; border-radius:8px; border:none; color:#fff; font-weight:700; cursor:pointer; width:100%;}
+
+/* 万能薬回復確認モーダル */
+#recovery-modal {position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;z-index:1001;}
+#recovery-box {background:#fff;padding:24px;border-radius:16px;max-width:400px;width:90%;text-align:center;box-shadow:0 8px 20px rgba(0,0,0,0.3);}
+#recovery-box h2 {color:#e91e63; margin-bottom:12px;}
+#recovery-text {margin-bottom:20px; font-weight:bold;}
+.recovery-actions {display:flex; gap:10px; justify-content:center;}
+.rec-btn {padding:10px 20px; border-radius:8px; border:none; font-weight:bold; cursor:pointer; color:#fff;}
+.rec-yes {background:#4CAF50;}
+.rec-no {background:#f44336;}
+
+body{height:100%;margin:0;font-family:"Helvetica Neue",Arial,sans-serif;}
+/* 経済状況表示パネル */
+#economy-panel {
+  background: rgba(255,255,255,0.9);
+  padding: 8px 16px;
+  border-radius: 20px;
+  margin-bottom: 10px;
+  text-align: center;
+  font-weight: bold;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 2px solid #333;
+  transition: background 0.5s ease;
+  border: 3px solid #333;
+}
+#economy-icon { font-size: 24px; }
+
+/* 誤作動対策コントロール（位置をターン終了の下へ変更） */
+.system-controls {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 20px;
+  width: 100%;
+}
+.sys-btn {
+  background: #555; 
+  color: #fff; 
+  border: 1px solid rgba(255,255,255,0.2);
+  padding: 8px 12px; 
+  border-radius: 8px; 
+  cursor: pointer; 
+  font-size: 12px; 
+  text-decoration: none;
+  font-weight: bold;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.2);
+  transition: 0.2s;
+}
+.sys-btn:hover { background: #333; transform: translateY(-2px); }
+.sys-btn:active { transform: translateY(0); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div id="economy-panel">
+    <span id="economy-icon">☀️</span>
+    <span id="economy-text">経済状況: 平穏</span>
+  </div>
+
+<div class="players" id="players">
+  <div class="player p1 current" id="pl-1"><div class="name" id="plname-0">Player 1</div><div class="meta">色: 赤</div><div class="buff" id="buff-1"></div></div>
+  <div class="player p2" id="pl-2"><div class="name" id="plname-1">Player 2</div><div class="meta">色: 青</div><div class="buff" id="buff-2"></div></div>
+  <div class="player p3" id="pl-3"><div class="name" id="plname-2">Player 3</div><div class="meta">色: 緑</div><div class="buff" id="buff-3"></div></div>
+  <div class="player p4" id="pl-4"><div class="name" id="plname-3">Player 4</div><div class="meta">色: 黄</div><div class="buff" id="buff-4"></div></div>
+</div>
+
+<div class="main-grid">
+  <section class="board">
+    <div class="dice-box" aria-live="polite">
+      <div class="dice-images" id="dice-area"></div>
+    </div>
+    
+    <div id="dice-sum">合計: 0</div>
+    <div style="margin-top:10px">現在の番: <strong id="turn-name">Player 1</strong></div>
+    
+    <div class="controls" style="margin-top:12px">
+      <button class="big-btn" id="rollBtn">🎲 サイコロを振る</button>
+      <button class="big-btn" id="eventBtn">⚡ イベント開始</button>
+      <button class="big-btn shop-btn" id="shopBtn">🛒 ショップ</button>
+    </div>
+    
+    <div class="controls" style="margin-top:10px;">
+        <button class="big-btn goal-btn" id="goalBtn">🚩 1つゴール (+4000)</button>
+        <button class="big-btn finish-btn" id="finishBtn">👑 上がり！ (順位確定)</button>
+    </div>
+
+    <div style="width:100%;max-width:520px;margin-top:14px">
+      <div class="event-card hidden" id="event-card" role="status" aria-live="polite">
+        <div>
+          <div class="event-label" id="event-label">イベント</div>
+          <div class="event-sub" id="event-text">ここにイベントが表示されます</div>
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:12px">
+      <button class="big-btn" id="endBtn">ターン終了 → 次のプレイヤーへ</button>
+    </div>
+
+    <div class="system-controls">
+      <button class="sys-btn" id="undoBtn">↩️ ひとつ戻る</button>
+      <button class="sys-btn" id="redoBtn">↪️ ひとつ進む</button>
+      <a href="index.html" class="sys-btn">🏠 タイトルへ</a>
+    </div>
+
+  </section>
+
+  <aside class="money-panel"></aside>
+</div>
+
+<div id="recovery-modal">
+  <div id="recovery-box">
+    <h2>💊 回復確認</h2>
+    <p id="recovery-text">万能薬 ($300) を購入して、<br>状態異常を回復しますか？</p>
+    <div class="recovery-actions">
+      <button class="rec-btn rec-yes" id="rec-yes-btn">はい ($300払う)</button>
+      <button class="rec-btn rec-no" id="rec-no-btn">いいえ (スキップ)</button>
+    </div>
+  </div>
+</div>
+
+<div id="dice-six-modal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center;z-index:9999;">
+  <div style="background:#fff;padding:30px;border-radius:20px;text-align:center;box-shadow:0 10px 30px rgba(0,0,0,0.5);max-width:400px;width:90%;">
+    <h2 style="color:#d32f2f;margin-top:0;">🎲 6が出ました！</h2>
+    <p style="font-weight:bold;margin-bottom:20px; color:#333;">どちらのアクションを行いますか？</p>
+    <div style="display:flex;flex-direction:column;gap:15px;">
+      <button id="choice-reroll" style="padding:15px;font-size:18px;font-weight:bold;background:#4CAF50;color:#fff;border:none;border-radius:12px;cursor:pointer;">もう一度サイコロを振る</button>
+      <button id="choice-spawn" style="padding:15px;font-size:18px;font-weight:bold;background:#2196F3;color:#fff;border:none;border-radius:12px;cursor:pointer;">新しいコマを出す(出庫)</button>
+    </div>
+  </div>
+</div>
+
+<div id="shop-modal">
+  <div id="shop-box">
+    <h2 id="shop-title">アイテムショップ</h2>
+    <div class="shop-list" id="shop-list"></div>
+    <button id="shop-close">閉じる</button>
+  </div>
+</div>
+
+<div id="quiz-modal">
+  <div id="quiz-box">
+    <h2 id="quiz-question">問題</h2>
+    <div id="quiz-options"></div>
+    <div id="quiz-result"></div>
+    <button id="quiz-ok">OK</button>
+  </div>
+</div>
+
+<div id="winner-modal">
+  <div id="winner-box">
+    <h2 id="winner-text">〇〇 win!!</h2>
+    <button id="restart-btn">次のゲームへ</button>
+  </div>
+</div>
+
+<div id="lottery-modal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);display:none;align-items:center;justify-content:center;z-index:1100;color:#fff;">
+  <div style="background:#222;padding:30px;border-radius:20px;text-align:center;border:4px solid #ffd700;max-width:400px;width:90%;">
+    <h2 style="color:#ffd700;margin-bottom:20px;">🎰 宝くじルーレット 🎰</h2>
+    <div id="roulette-display" style="font-size:48px;font-weight:900;margin:30px 0;color:#fff;text-shadow:0 0 10px #ffd700;height:60px;">$0</div>
+    <button id="lottery-stop-btn" class="big-btn" style="background:#ffd700;color:#000;width:100%;font-size:20px;">STOP!</button>
+    <button id="lottery-ok-btn" class="big-btn" style="background:#4CAF50;color:#fff;width:100%;font-size:20px;display:none;">賞金を受け取る</button>
+  </div>
+</div>
+
+<div id="dice-selection-modal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.65);display:none;align-items:center;justify-content:center;z-index:1005;">
+  <div style="background:#fff;padding:24px;border-radius:16px;text-align:center;box-shadow:0 8px 20px rgba(0,0,0,0.3);">
+    <h2>進む数を選んでください</h2>
+    <div id="dice-selection-btns" style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:15px;">
+      </div>
+    <button onclick="document.getElementById('dice-selection-modal').style.display='none'" style="margin-top:15px;padding:8px;border:none;background:#666;color:#fff;border-radius:8px;cursor:pointer;width:100%;">キャンセル</button>
+  </div>
+</div>
+
+</div>
+
+<script>
+  function openDiceSelection(player) {
+  const modal = document.getElementById('dice-selection-modal');
+  const container = document.getElementById('dice-selection-btns');
+  container.innerHTML = '';
+  modal.style.display = 'flex';
+
+  // 1から6までのボタンを作成
+  for (let i = 1; i <= 6; i++) {
+    const btn = document.createElement('button');
+    btn.textContent = i;
+    btn.style.cssText = "padding:15px;font-size:20px;font-weight:bold;border-radius:10px;border:none;background:#38b6ff;color:#fff;cursor:pointer;";
+    
+    btn.onclick = () => {
+      saveState();
+      modal.style.display = 'none';
+      shopModal.style.display = 'none'; // ショップを閉じる
+      
+      // プレイヤーを移動させる
+      player.pos += i;
+      showEventCard(`${player.name}は自在カードで ${i} マス進んだ！`);
+      
+      // 移動後のUI更新
+      updateUI();
+      
+      // もし移動後の処理（イベント発生など）を自動で行いたい場合はここに追記
+    };
+    container.appendChild(btn);
+  }
+}
+  function spawnMoneyParticle(amount) {
+  const el = document.createElement('div');
+  el.className = 'money-particle';
+  
+  if (amount > 0) {
+    el.textContent = `+$${amount}`;
+    el.style.color = '#4eff4e'; 
+  } else if (amount < 0) {
+    el.textContent = `-$${Math.abs(amount)}`;
+    el.style.color = '#ff4e4e';
+  } else {
+    return;
+  }
+
+  el.style.left = (window.innerWidth / 2 - 50) + 'px';
+  el.style.top = (window.innerHeight / 2) + 'px';
+
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 1200);
+}
+// --- 履歴管理システム（Undo/Redo） ---
+let historyStack = [];
+let redoStack = [];
+
+// 状態保存（操作の直前に呼ぶ）
+function saveState() {
+  if(historyStack.length > 20) historyStack.shift(); 
+  const state = {
+    players: JSON.parse(JSON.stringify(players)),
+    currentPlayer: currentPlayer,
+    economyMode: economyMode,
+    rankCounter: rankCounter,
+    isExtraRoll: isExtraRoll,
+    rollDisabled: rollBtn.disabled,
+    eventDisabled: eventBtn.disabled
+  };
+  historyStack.push(state);
+  redoStack = []; 
+}
+
+// 状態復元
+function restoreState(state) {
+  players.forEach((p, i) => {
+    Object.assign(p, state.players[i]);
+  });
+  
+  currentPlayer = state.currentPlayer;
+  economyMode = state.economyMode;
+  rankCounter = state.rankCounter;
+  isExtraRoll = state.isExtraRoll;
+  
+  rollBtn.disabled = state.rollDisabled;
+  eventBtn.disabled = state.eventDisabled;
+  
+  updateEconomyDisplay();
+  updateUI();
+}
+
+document.getElementById('undoBtn').addEventListener('click', () => {
+  if (historyStack.length > 0) {
+    const currentState = {
+        players: JSON.parse(JSON.stringify(players)),
+        currentPlayer: currentPlayer,
+        economyMode: economyMode,
+        rankCounter: rankCounter,
+        isExtraRoll: isExtraRoll,
+        rollDisabled: rollBtn.disabled,
+        eventDisabled: eventBtn.disabled
+    };
+    redoStack.push(currentState);
+    
+    const prevState = historyStack.pop();
+    restoreState(prevState);
+    showEventCard("↩️ ひとつ前の状態に戻しました");
+  } else {
+    showEventCard("これ以上戻れません");
+  }
+});
+
+document.getElementById('redoBtn').addEventListener('click', () => {
+  if (redoStack.length > 0) {
+    const currentState = {
+        players: JSON.parse(JSON.stringify(players)),
+        currentPlayer: currentPlayer,
+        economyMode: economyMode,
+        rankCounter: rankCounter,
+        isExtraRoll: isExtraRoll,
+        rollDisabled: rollBtn.disabled,
+        eventDisabled: eventBtn.disabled
+    };
+    historyStack.push(currentState);
+
+    const nextState = redoStack.pop();
+    restoreState(nextState);
+    showEventCard("↪️ ひとつ進みました");
+  } else {
+    showEventCard("これ以上進めません");
+  }
+});
+
+// --- 既存ロジック ---
+
+let isExtraRoll = false;
+let economyMode = 'normal'; 
+let rankCounter = 1; 
+const rankBonuses = [0, 10000, 8000, 5000, 2000];
+
+let diceCount = 1;
+let currentPlayer = 0;
+const players = [
+  {name:"Player 1", total:1000, buff:0, skipTurn:0, reverse:0, pos:0, color:"#ff5858", lost:false, finished:false, rank:0,color:"#ffb3b3"},
+  {name:"Player 2", total:1000, buff:0, skipTurn:0, reverse:0, pos:0, color:"#4da6ff", lost:false, finished:false, rank:0,color:"#b3d1ff"},
+  {name:"Player 3", total:1000, buff:0, skipTurn:0, reverse:0, pos:0, color:"#7df07e", lost:false, finished:false, rank:0,color:"#b3ffb3"},
+  {name:"Player 4", total:1000, buff:0, skipTurn:0, reverse:0, pos:0, color:"#ffd86b", lost:false, finished:false, rank:0,color:"#ffffb3"}
+];
+
+// --- クイズの発生確率を約10%にするため、"クイズ！"を3つに増やしました ---
+const events = [
+  "もう一度サイコロを振って出た目分戻る","もう一度サイコロを振って出た目分進む","次のターンサイコロ1つ追加",
+  "全部のコマスタートに戻る","コマを１つゴールに進める","次のターン、進むマス×２",
+  "もう一回行動できる","1ターン休み","次のターンだけ他のプレイヤーの攻撃回避",
+  "強奪(次の番のプレイヤーから$800もらえる)","一交換(右隣の人とコマの場所交換)","3ターン逆走",
+  "次のターンサイコロ3つ追加","次のターンサイコロ2つ追加",
+  "会社でプロジェクトが成功し、臨時ボーナスが出た、$1000獲得","万引き成功$5000獲得","お金を拾った$800獲得","$フリマアプリで高く売れた$3000獲得","恋人ができた$500獲得","ご祝儀をもらった$900獲得","仮想通貨で大当たり$7000獲得",
+  "競馬に負けた$800失う","クレジットカード不正利用$1000失う","クーリングオフに失敗$500失う","玉突き事故足折れた$900失う","詐欺メールに引っかかる$200失う","株失敗$8000失う","ゴールのコマ失う",
+  "クイズ！","クイズ！","クイズ！","宝くじ","宝くじ","宝くじ","宝くじ" // 10% (3/30) の確率で発生
+];
+// ------------------------------------------------------------------------------------------
+
+let lotteryInterval;
+let currentLotteryAmount = 0;
+const lotteryValues = [0, 100, 300, 500, 1000, 2000, 3000, 5000, 10000];
+
+function startLottery(pIdx) {
+  const modal = document.getElementById('lottery-modal');
+  const display = document.getElementById('roulette-display');
+  const stopBtn = document.getElementById('lottery-stop-btn');
+  const okBtn = document.getElementById('lottery-ok-btn');
+  
+  modal.style.display = 'flex';
+  stopBtn.style.display = 'block';
+  okBtn.style.display = 'none';
+  display.style.color = "#ffd700"; // 初期の色
+
+  // ルーレット回転アニメーション
+  lotteryInterval = setInterval(() => {
+    currentLotteryAmount = lotteryValues[Math.floor(Math.random() * lotteryValues.length)];
+    display.textContent = `$${currentLotteryAmount}`;
+  }, 50);
+
+  stopBtn.onclick = () => {
+    clearInterval(lotteryInterval);
+    stopBtn.style.display = 'none';
+    okBtn.style.display = 'block';
+    display.style.color = "#fff"; // 確定時の色
+    display.textContent = `当選！ $${currentLotteryAmount}`;
+  };
+
+  okBtn.onclick = () => {
+    saveState(); // 履歴に保存
+    
+    let finalAmount = currentLotteryAmount;
+    
+    // 1. 経済状況（インフレ・デフレ）を反映させる
+    if(economyMode === 'inflation') finalAmount *= 2;
+    if(economyMode === 'deflation') finalAmount = Math.floor(finalAmount / 2);
+    
+    // 2. プレイヤーの所持金を増やす
+    players[pIdx].total += finalAmount;
+
+    // ★ 3. パーティクル（浮き上がる数字）を表示
+    if (finalAmount > 0) {
+      spawnMoneyParticle(finalAmount); 
+    }
+    
+    // 4. UIを更新してモーダルを閉じる
+    updateUI();
+    modal.style.display = 'none';
+    
+    // 5. メッセージを表示
+    showEventCard(`${players[pIdx].name}は宝くじで$${finalAmount}獲得！`);
+    
+    // 6. ボタン制御
+    rollBtn.disabled = true;
+    eventBtn.disabled = true;
+  };
+}
+
+const quizzes=[
+  {q:"第二次世界大戦で日本が降伏した年は？", options:["1944","1945","1946","1947"], answer:1},
+  {q:"フランス革命が始まった年は？", options:["1788","1789","1790","1791"], answer:1},
+  {q:"日本国憲法の施行日は？", options:["1945年5月3日","1946年5月3日","1947年5月3日","1948年5月3日"], answer:2},
+  {q:"元素 Fe（鉄）の酸化状態で最も安定しているものは？", options:["+1","+2","+3","+4"], answer:2},
+  {q:"高校生物で、遺伝情報を担う物質は？", options:["タンパク質","RNA","DNA","脂質"], answer:2},
+  {q:"酸化還元反応で電子を失うものは？", options:["酸化剤","還元剤","水","酸素"], answer:1},
+  {q:"ニュートンの法則で、物体に力が加わるとどうなる？", options:["速度が変わる","位置が変わるだけ","質量が変わる","加速度は一定"], answer:0},
+  {q:"sin30°の値は？", options:["1/2","√2/2","√3/2","1"], answer:0},
+  {q:"光の屈折で光が媒質に入るとき速度はどうなる？", options:["速くなる","遅くなる","変わらない","逆方向に曲がる"], answer:1},
+  {q:"葉緑体で起こる反応は？", options:["呼吸","光合成","発酵","分解"], answer:1},
+  {q:"DNA複製は細胞周期のどの段階で行われる？", options:["分裂期","間期","前期","後期"], answer:1},
+  {q:"日本の三権分立の行政権を担うのは？", options:["国会","内閣","裁判所","地方自治体"], answer:1},
+  {q:"日本の国会は衆議院と何で構成される？", options:["参議院","上院","下院","国務院"], answer:0},
+  {q:"第二次世界大戦後、国際連合が設立された年は？", options:["1944","1945","1946","1947"], answer:1},
+  {q:"光の反射で入射角=反射角の法則を発見した人物は？", options:["ニュートン","スネル","フック","アインシュタイン"], answer:1},
+  {q:"If I ___ you, I would have apologized earlier.", options:["am","was","were","be"], answer:2},
+  {q:"Choose the correct sentence.", options:["Hardly I had arrived when it started raining.","Hardly had I arrived when it started raining.","I had hardly arrived when it started raining.","Hardly had I arrived it started raining."], answer:1},
+  {q:"He insisted on ___ early.", options:["to leave","leaving","leave","leaved"], answer:1},
+  {q:"The book, ___ was on the table, disappeared.", options:["who","whom","which","whose"], answer:2},
+  {q:"No sooner ___ the train than it started raining.", options:["did he leave","he left","had he left","he had left"], answer:2},
+  {q:"I wish I ___ studied harder for the exam.", options:["have","had","had had","would have"], answer:2},
+  {q:"Rarely ___ such a beautiful sunset.", options:["I have seen","have I seen","I saw","I had seen"], answer:1},
+  {q:"She made him ___ the report immediately.", options:["finish","finished","to finish","finishing"], answer:0},
+  {q:"If it ___ for your help, I couldn't have completed it.", options:["wasn't","weren't","hadn't been","isn't"], answer:2},
+  {q:"He has been working here ___ five years.", options:["since","for","from","during"], answer:1},
+  {q:"アメリカ独立宣言は何年に採択された？", options:["1775","1776","1777","1778"], answer:1},
+  {q:"フランス革命で権力を握った人物は？", options:["ルイ16世","ナポレオン","ロベスピエール","ルイ14世"], answer:2},
+  {q:"イギリスで産業革命が最初に始まった分野は？", options:["繊維産業","鉄鋼業","造船業","農業"], answer:0},
+  {q:"元素 O（酸素）は周期表の何族？", options:["ハロゲン","希ガス","酸素族","アルカリ金属"], answer:2},
+  {q:"日本の最高裁判所はどの権力に属する？", options:["立法","行政","司法","検察"], answer:2},
+  {q:"高校物理で、光は真空中で何m/sで伝わる？", options:["3×10⁶","3×10⁸","3×10¹⁰","3×10¹²"], answer:1},
+  {q:"高校化学で、水酸化ナトリウム NaOH は何性？", options:["酸性","塩基性","中性","酸化性"], answer:1},
+  {q:"高校地理で、日本の北海道地方の気候は？", options:["亜寒帯湿潤気候","温暖湿潤気候","地中海性気候","砂漠気候"], answer:0},
+  {q:"第二次世界大戦後、冷戦が始まった理由は？", options:["資源争奪","イデオロギー対立","植民地獲得","宗教対立"], answer:1}
+];
+
+const countEl=document.getElementById('count'); 
+const diceAreaEl=document.getElementById('dice-area');
+const diceSumEl=document.getElementById('dice-sum'); // === 追加 ===
+const rollBtn=document.getElementById('rollBtn');
+const eventBtn=document.getElementById('eventBtn');
+const goalBtn=document.getElementById('goalBtn');
+const finishBtn=document.getElementById('finishBtn');
+const endBtn=document.getElementById('endBtn');
+const eventCard=document.getElementById('event-card');
+const eventText=document.getElementById('event-text');
+const eventLabel=document.getElementById('event-label');
+const turnName=document.getElementById('turn-name');
+
+const quizModal=document.getElementById('quiz-modal');
+const quizQuestion=document.getElementById('quiz-question');
+const quizOptions=document.getElementById('quiz-options');
+const quizResult=document.getElementById('quiz-result');
+const quizOk=document.getElementById('quiz-ok');
+
+const winnerModal=document.getElementById('winner-modal');
+const winnerText=document.getElementById('winner-text');
+const restartBtn=document.getElementById('restart-btn');
+
+function updateUI(){
+  for(let i=0;i<players.length;i++){
+    const el=document.getElementById('pl-'+(i+1));
+    el.classList.remove('lost', 'current', 'finished');
+    if(players[i].lost) el.classList.add('lost');
+    if(players[i].finished) el.classList.add('finished');
+    if(i===currentPlayer) el.classList.add('current');
+    
+    let buffs=[];
+    if(players[i].finished) {
+       buffs.push(`🏆 ${players[i].rank}位でゴール！`);
+    } else {
+       if(players[i].buff>0) buffs.push(`🎲 +${players[i].buff}`);
+       if(players[i].reverse>0) buffs.push(`🔄${players[i].reverse}ターン逆走`);
+       if(players[i].skipTurn>0) buffs.push(`⏸${players[i].skipTurn}ターン休み`);
+    }
+    
+    document.getElementById('buff-'+(i+1)).textContent=buffs.join(" / ");
+    document.getElementById('plname-'+i).textContent=players[i].name;
+    const totEl=document.getElementById('total-'+i);
+    if(totEl) totEl.textContent=players[i].total;
+    if(players[i].total <=0 && !players[i].lost){
+      players[i].lost=true;
+      showEventCard(`${players[i].name} は所持金0で失格になりました！`);
+    }
+  }
+  turnName.textContent=players[currentPlayer].name;
+  document.body.style.backgroundColor = players[currentPlayer].color;
+  checkWinner();
+}
+
+function checkWinner(){
+  const active = players.filter(p=> !p.lost && !p.finished);
+  const survivors = players.filter(p => !p.lost);
+  
+  if(active.length === 0 || (survivors.length === 1 && survivors[0].finished)){
+     let maxMoney = -999999;
+     let winner = null;
+     players.forEach(p => {
+       if(!p.lost && p.total > maxMoney){
+         maxMoney = p.total;
+         winner = p;
+       }
+     });
+     if(winner){
+       winnerText.textContent = `資産王: ${winner.name} ($${winner.total})`;
+       winnerModal.style.display='flex';
+     }
+  }
+}
+
+restartBtn.addEventListener('click',()=>{
+  saveState(); 
+  players.forEach(p=>{
+    p.total=1000; p.buff=0; p.skipTurn=0; p.reverse=0; p.pos=0; p.lost=false; p.finished=false; p.rank=0;
+  });
+  currentPlayer=0;
+  diceCount=1;
+  rankCounter=1;
+  isExtraRoll = false; 
+  rollBtn.disabled = false; eventBtn.disabled = true; 
+  economyMode = 'normal'; updateEconomyDisplay(); 
+  winnerModal.style.display='none';
+  diceSumEl.textContent = '合計: 0'; // === 追加 ===
+  updateUI();
+});
+
+function clearDice(){diceAreaEl.innerHTML='';}
+// 修正: showDiceRoll関数で合計値を返すように変更
+function showDiceRoll(n){
+  clearDice();
+  let actualN = n;
+  if(economyMode === 'burst') actualN = Math.max(1, actualN - 1);
+  if(economyMode === 'ice') actualN = Math.max(1, actualN - 1);
+  if(economyMode === 'wind') actualN += 1;
+  
+  let totalVal = 0; // 合計値変数
+
+  for(let i=0;i<actualN;i++){
+    const num=Math.floor(Math.random()*6)+1;
+    totalVal += num; // 加算
+    const img=document.createElement('img');
+    img.src=`./dice${num}.png`;
+    img.alt=`dice ${num}`;
+    img.style.transform='translateY(-14px) rotate(-18deg) scale(0.92)';
+    diceAreaEl.appendChild(img);
+    ((el,delay)=>{setTimeout(()=>{el.style.transition='transform .45s cubic-bezier(.2,.8,.2,1)'; el.style.transform='translateY(0) rotate(0) scale(1)';}, delay);})(img,i*90);
+  }
+  if(economyMode === 'burst' && n > actualN) showEventCard("バブル崩壊中！サイコロが減りました！");
+  
+  diceSumEl.textContent = '合計: ' + totalVal; // === 合計値を画面に表示 ===
+  
+  return totalVal; // 合計値を返す
+}
+
+function showEventCard(text){
+  eventLabel.textContent='イベント';
+  eventText.textContent=text;
+  eventCard.classList.remove('hidden');
+  clearTimeout(eventCard._timeout);
+  eventCard._timeout=setTimeout(()=>eventCard.classList.add('hidden'),4000);
+}
+
+function applyEventEffect(text, p) {
+  saveState();
+
+  // 宝くじとクイズは特殊な関数へ飛ばす
+  if (text === "宝くじ") {
+    startLottery(p);
+    return;
+  }
+  if (text === "クイズ！") {
+    startQuiz(p);
+    return;
+  }
+
+  // 特殊効果の処理
+  if (text.includes('次のターンサイコロ1つ追加')) players[p].buff += 1;
+  if (text.includes('3ターン逆走')) players[p].reverse = 3;
+  if (text.includes('次のターンサイコロ3つ追加')) players[p].buff += 3;
+  if (text.includes('次のターンサイコロ2つ追加')) players[p].buff += 2;
+  if (text.includes('1ターン休み')) players[p].skipTurn = 1;
+
+  // 数字が含まれている場合の金額処理
+  const m = text.match(/([0-9]{1,7})/);
+  if (m) {
+    let num = parseInt(m[1], 10);
+    
+    // 経済状況（景気）による変動
+    if (economyMode === 'inflation') {
+      num *= 2;
+      text += " (インフレx2!)";
+    } else if (economyMode === 'deflation') {
+      num = Math.floor(num / 2);
+      text += " (デフレ/2...)";
+    }
+
+    // お金の増減とパーティクル表示
+    if (text.includes('獲得')) {
+      players[p].total += num;
+      spawnMoneyParticle(num); // 緑色のふわっとした数字を出す
+    } else if (text.includes('失う')) {
+      players[p].total -= num;
+      spawnMoneyParticle(-num); // 赤色のふわっとした数字を出す
+    }
+  }
+
+  updateUI();
+  showEventCard(`${players[p].name} のイベント: ${text}`);
+
+  // 追加行動があるかどうかの判定
+  const isExtraAction = text.includes("分戻る") || text.includes("分進む") || text.includes("もう一回行動");
+  if (isExtraAction) {
+    rollBtn.disabled = false;
+    eventBtn.disabled = true;
+    isExtraRoll = true;
+  } else {
+    rollBtn.disabled = true;
+    eventBtn.disabled = true;
+  }
+}
+
+function startQuiz(playerIndex){
+  const idx = Math.floor(Math.random() * quizzes.length);
+  const quiz = quizzes[idx];
+  quizQuestion.textContent = quiz.q;
+  quizOptions.innerHTML = '';
+  quizResult.textContent = '';
+  quizOk.style.display = 'none';
+  quizModal.style.display = 'flex';
+  
+  quiz.options.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.textContent = opt;
+    btn.onclick = () => {
+      saveState(); 
+      
+      // すべてのボタンを無効化（連打防止）
+      const allBtns = quizOptions.querySelectorAll('button');
+      allBtns.forEach(b => b.disabled = true);
+
+      if (i === quiz.answer) {
+        // 正解の処理
+        players[playerIndex].total += 1200;
+        spawnMoneyParticle(1200); // ★緑の数字を出す
+        quizResult.textContent = "正解！＋1200＄";
+        quizResult.style.color = "#4CAF50";
+      } else {
+        // 不正解の処理
+        players[playerIndex].total -= 500;
+        spawnMoneyParticle(-500); // ★赤の数字を出す
+        quizResult.textContent = "不正解…−500＄";
+        quizResult.style.color = "#f44336";
+      }
+      
+      quizOk.style.display = 'inline-block';
+      updateUI();
+    };
+    quizOptions.appendChild(btn);
+  });
+}
+quizOk.addEventListener('click',()=>{
+    quizModal.style.display='none';
+    rollBtn.disabled = true;
+    eventBtn.disabled = true;
+});
+
+eventBtn.disabled = true;
+
+rollBtn.addEventListener('click', () => {
+  const player = players[currentPlayer];
+  if (player.lost) { showEventCard(`${player.name} は失格のため振れません`); return; }
+  if (player.finished) { showEventCard(`${player.name} はゴール済みです`); return; }
+
+  if (player.skipTurn > 0) {
+    showEventCard(`${player.name} は休みのため振れません`);
+    player.skipTurn--;
+    updateUI();
+    return;
+  }
+
+  saveState();
+
+  const totalDice = diceCount + player.buff;
+  const rollResult = showDiceRoll(totalDice); // サイコロを振る
+
+  player.buff = 0;
+  updateUI();
+
+  // --- ここから選択画面の処理 ---
+  if (rollResult === 6) {
+    const modal = document.getElementById('dice-six-modal');
+    modal.style.display = 'flex'; // モーダルを表示
+
+    // A.「もう一度振る」を選択
+    document.getElementById('choice-reroll').onclick = () => {
+      modal.style.display = 'none';
+      rollBtn.disabled = false; // ボタンを再び有効化
+      eventBtn.disabled = true;
+      isExtraRoll = true;
+      showEventCard("追加ターン獲得！もう一度振ってください。");
+    };
+
+    // B.「コマを出す」を選択
+    document.getElementById('choice-spawn').onclick = () => {
+      modal.style.display = 'none';
+      rollBtn.disabled = true;
+      eventBtn.disabled = false;
+      showEventCard("新しいコマを出庫しました！");
+    };
+    
+    return; // 6の時はここで終了（下の通常処理をさせない）
+  }
+
+  // --- 6以外の場合の通常処理 ---
+  showEventCard(`${player.name}、合計: ${rollResult}！ 出目の分進んでください！`);
+
+  if (isExtraRoll) {
+    rollBtn.disabled = true;
+    eventBtn.disabled = true;
+    isExtraRoll = false;
+  } else {
+    rollBtn.disabled = true;
+    eventBtn.disabled = false;
+  }
+});
+
+eventBtn.addEventListener('click',()=>{
+  const idx=Math.floor(Math.random()*events.length);
+  const text=events[idx];
+  applyEventEffect(text,currentPlayer);
+});
+
+goalBtn.addEventListener('click', ()=>{
+  saveState();
+  const p = players[currentPlayer];
+  p.total += 4000;
+  showEventCard(`🚩 ${p.name}、コマゴール！ +$4000`);
+  updateUI();
+});
+
+finishBtn.addEventListener('click', ()=>{
+  saveState();
+  const p = players[currentPlayer];
+  if(p.finished) return;
+  p.finished = true;
+  if(rankCounter <= 4){
+    const bonus = rankBonuses[rankCounter];
+    p.total += bonus;
+    p.rank = rankCounter;
+    showEventCard(`👑 ${p.name}、${rankCounter}位で全コマゴール！ ボーナス+$${bonus}`);
+    rankCounter++;
+  } else {
+    p.rank = rankCounter;
+    showEventCard(`👑 ${p.name}、全コマゴール！`);
+  }
+  updateUI();
+});
+
+
+const economyData = {
+  normal: {name:"平穏", bg:"#7bd24a", icon:"☀️"},
+  inflation: {name:"インフレ (金額2倍)", bg:"#ffeb3b", icon:"📈"},
+  deflation: {name:"デフレ (金額半減)", bg:"#cfd8dc", icon:"📉"},
+  burst: {name:"バブル崩壊 (10%没収)", bg:"#7b1fa2", icon:"😱"}
+};
+
+function updateEconomyDisplay(){
+  const w = economyData[economyMode];
+  const panel = document.getElementById('economy-panel'); // パネル要素を取得
+  
+  document.getElementById('economy-icon').textContent = w.icon;
+  document.getElementById('economy-text').textContent = "経済状況: " + w.name;
+  
+  // パネルの背景色だけを書き換える
+  panel.style.backgroundColor = w.bg;
+}
+
+function checkEconomyChange(){
+  if(Math.random() < 0.2){
+    const keys = Object.keys(economyData);
+    const nextKey = keys[Math.floor(Math.random() * keys.length)];
+    economyMode = nextKey;
+    updateEconomyDisplay();
+    showEventCard(`⚠️ 経済状況が「${economyData[nextKey].name}」に変わりました！`);
+  }
+}
+
+function endTurn() {
+    saveState(); 
+
+    rollBtn.disabled = false;
+    eventBtn.disabled = true;
+    isExtraRoll = false;
+    diceSumEl.textContent = '合計: 0'; // === ターン終了時にリセット ===
+
+    if(players[currentPlayer].reverse > 0) players[currentPlayer].reverse--;
+    if(economyMode === 'burst' && !players[currentPlayer].lost && players[currentPlayer].total > 0){
+       players[currentPlayer].total = Math.floor(players[currentPlayer].total * 0.9);
+    }
+    proceedToNextPlayer();
+}
+
+function proceedToNextPlayer() {
+    checkEconomyChange();
+    findNextPlayable(1);
+}
+
+function findNextPlayable(offset) {
+    if(offset > 4) { updateUI(); return; }
+    
+    let nextIdx = (currentPlayer + offset) % players.length;
+    let nextP = players[nextIdx];
+    
+    if(nextP.lost || nextP.finished) {
+       return findNextPlayable(offset + 1);
+    }
+    
+    currentPlayer = nextIdx;
+    
+    if(nextP.skipTurn > 0) {
+       const cost = 300;
+       if(nextP.total >= cost) {
+          showRecoveryModal(nextP);
+          updateUI();
+          return;
+       } else {
+          showEventCard(`${nextP.name} は休みです (所持金不足)`);
+          nextP.skipTurn--;
+          updateUI();
+          rollBtn.disabled = true;
+          eventBtn.disabled = true;
+          setTimeout(() => { endTurn(); }, 1500);
+          return;
+       }
+    }
+    
+    updateUI();
+    showEventCard(`${nextP.name} の番です！`);
+}
+
+const recModal = document.getElementById('recovery-modal');
+const recText = document.getElementById('recovery-text');
+const recYes = document.getElementById('rec-yes-btn');
+const recNo = document.getElementById('rec-no-btn');
+
+function showRecoveryModal(p) {
+   recText.innerHTML = `${p.name}さん、万能薬($300)を購入して<br>休み状態を回復しますか？`;
+   recModal.style.display = 'flex';
+}
+
+recYes.onclick = () => {
+   saveState();
+   const p = players[currentPlayer];
+   if(p.total >= 300) {
+      p.total -= 300;
+      p.skipTurn = 0;
+      if(p.reverse > 0) p.reverse = 0; 
+      showEventCard(`${p.name} は万能薬で回復しました！`);
+      recModal.style.display = 'none';
+      updateUI();
+      rollBtn.disabled = false;
+   }
+};
+
+recNo.onclick = () => {
+   saveState();
+   const p = players[currentPlayer];
+   showEventCard(`${p.name} は回復しませんでした (1回休み)`);
+   p.skipTurn--;
+   recModal.style.display = 'none';
+   updateUI();
+   rollBtn.disabled = true;
+   setTimeout(() => { endTurn(); }, 1000);
+};
+
+
+const moneyPanel=document.querySelector('.money-panel');
+for(let i=0;i<4;i++){
+  const p=players[i];
+  const div=document.createElement('div');
+  div.className='person-money';
+  div.innerHTML=`<div class="color-bar" style="background:${p.color}"></div>
+  <div class="info">
+  <input class="name-input" id="money-name-${i}" value="${p.name}" />
+  <div class="total" id="total-${i}">${p.total}</div>
+  <div class="money-buttons">
+    <button data-val="-1000">-1000</button>
+    <button data-val="-100">-100</button>
+    <button data-val="-10">-10</button>
+    <button data-val="+10">+10</button>
+    <button data-val="+100">+100</button>
+    <button data-val="+1000">+1000</button>
+  </div>
+  </div>`;
+  moneyPanel.appendChild(div);
+
+  const buttons = div.querySelectorAll('.money-buttons button');
+  buttons.forEach(btn=>{
+    btn.addEventListener('click',()=>{
+      saveState(); 
+      const val = parseInt(btn.getAttribute('data-val'),10);
+      p.total += val;
+      updateUI();
+    });
+  });
+}
+
+function endTurn() {
+  const currentPlayerObj = players[currentPlayer];
+  const activePlayers = players.filter(p => !p.lost && !p.finished);
+  
+  if (activePlayers.length > 0) {
+    const lowestPlayer = activePlayers.reduce((prev, curr) => 
+      (prev.total < curr.total) ? prev : curr, activePlayers[0]
+    );
+
+    // テスト用に1.0 (100%)。本番は0.03に。
+    if (Math.random() < 0.03 && currentPlayerObj === lowestPlayer) {
+      saveState();
+      
+      // --- 演出：大迫力の天使降臨 ---
+      const bonus = 30000;
+      currentPlayerObj.total += bonus;
+
+      // 1. 巨大な天使の羽根を背景に表示
+      const overlay = document.createElement('div');
+      overlay.style.cssText = `
+        position:fixed; top:0; left:0; width:100%; height:100%;
+        background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,215,0,0.3) 100%);
+        z-index:10000; display:flex; align-items:center; justify-content:center;
+        flex-direction:column; animation: fadeInOut 3s forwards; pointer-events:none;
+      `;
+      overlay.innerHTML = `
+        <div style="font-size:120px; filter:drop-shadow(0 0 20px gold); animation: float 1s infinite alternate;">👼</div>
+        <div style="font-size:40px; font-weight:900; color:#d4af37; text-shadow:2px 2px 10px white; margin-top:20px;">
+          DIVINE BLESSING!
+        </div>
+        <div style="font-size:60px; font-weight:900; color:#fff; -webkit-text-stroke:2px gold;">+$${bonus.toLocaleString()}</div>
+      `;
+      document.body.appendChild(overlay);
+
+      // 2. 羽根（パーティクル）を散らす
+      for(let i=0; i<30; i++) {
+        setTimeout(() => {
+          const leaf = document.createElement('div');
+          leaf.textContent = '🕊️';
+          leaf.style.cssText = `
+            position:fixed; left:${Math.random()*100}%; top:-50px; font-size:${20+Math.random()*30}px;
+            z-index:10001; transition: transform 3s linear, top 3s linear; opacity:0.8;
+          `;
+          document.body.appendChild(leaf);
+          setTimeout(() => {
+            leaf.style.top = '110%';
+            leaf.style.transform = `translateX(${(Math.random()-0.5)*200}px) rotate(${Math.random()*360}deg)`;
+          }, 10);
+          setTimeout(() => leaf.remove(), 3000);
+        }, i * 100);
+      }
+
+      // 3. 画面を揺らす（スクリーンシェイク）
+      document.body.style.animation = "shake 0.5s ease-in-out";
+      
+      showEventCard(`✨ 神の加護！最下位の${currentPlayerObj.name}に奇跡が起きました！ ✨`);
+
+      // 3秒後に演出用要素を削除
+      setTimeout(() => {
+        overlay.remove();
+        document.body.style.animation = "";
+      }, 3000);
+    }
+  }
+
+  // --- ターン交代処理 ---
+  currentPlayer = (currentPlayer + 1) % players.length;
+  while (players[currentPlayer].lost || players[currentPlayer].finished) {
+    currentPlayer = (currentPlayer + 1) % players.length;
+  }
+  
+  isExtraRoll = false;
+  rollBtn.disabled = false;
+  eventBtn.disabled = true;
+  clearDice();
+  if(diceSumEl) diceSumEl.textContent = '合計: 0';
+  updateUI();
+}
+
+// 演出用のアニメーションCSSを追加
+const style = document.createElement('style');
+style.innerHTML = `
+  @keyframes fadeInOut { 0% {opacity:0;} 20% {opacity:1;} 80% {opacity:1;} 100% {opacity:0;} }
+  @keyframes float { from {transform:translateY(0) scale(1);} to {transform:translateY(-20px) scale(1.1);} }
+  @keyframes shake { 0%, 100% {transform:translateX(0);} 25% {transform:translateX(-10px);} 75% {transform:translateX(10px);} }
+`;
+document.head.appendChild(style);
+
+endBtn.onclick = endTurn;
+
+// ボタンにこの新しい endTurn を登録
+endBtn.onclick = endTurn;
+
+endBtn.addEventListener('click',endTurn);
+
+const shopBtn = document.getElementById('shopBtn');
+const shopModal = document.getElementById('shop-modal');
+const shopList = document.getElementById('shop-list');
+const shopClose = document.getElementById('shop-close');
+const shopTitle = document.getElementById('shop-title');
+
+const items = [
+  {name: "スニーカー", cost: 4000, desc: "次のサイコロ +1", effect: (p) => { p.buff += 1; }},
+  {name: "ロケット", cost: 10000, desc: "次のサイコロ +3", effect: (p) => { p.buff += 3; }},
+  {name: "万能薬", cost: 3000, desc: "休み・逆走を回復", effect: (p) => { p.skipTurn = 0; p.reverse = 0; }},
+  {name: "妨害電波", cost: 6000, desc: "選んだ人を1回休みにする", effect: null} ,
+  {name: "自在カード",cost: 15000,desc: "1〜6の好きな数だけ進める。",effect: (p) => {openDiceSelection(p);}},
+];
+
+function openShop(){
+  const p = players[currentPlayer];
+  shopTitle.textContent = "アイテムショップ";
+  shopList.innerHTML = "";
+  shopList.style.display = "grid"; 
+  
+  items.forEach(item => {
+    const div = document.createElement('div');
+    div.className = 'shop-item';
+    const canBuy = p.total >= item.cost;
+    
+    div.innerHTML = `
+      <h3>${item.name}</h3>
+      <p>${item.desc}</p>
+      <div class="shop-price">$${item.cost}</div>
+      <button class="shop-buy-btn" ${canBuy ? '' : 'disabled'}>購入</button>
+    `;
+    
+    div.querySelector('button').addEventListener('click', () => {
+      if(p.total >= item.cost){
+        if(item.name === "妨害電波"){
+           // ターゲット選択が必要なアイテム
+           showTargetSelection(p, item);
+           // ※showTargetSelection側の「決定ボタン」にも
+           // spawnMoneyParticle(-item.cost); を入れるのがおすすめです
+        } else {
+           // 通常アイテムの購入
+           saveState(); 
+           p.total -= item.cost;
+           
+           // ★ここでお金が減るエフェクト（パーティクル）を表示
+           spawnMoneyParticle(-item.cost); 
+           
+           item.effect(p);
+           showEventCard(`${p.name}が${item.name}を購入しました！`);
+           updateUI();
+           shopModal.style.display = 'none';
+        }
+      }
+    });
+    
+    shopList.appendChild(div);
+  });
+  shopModal.style.display = 'flex';
+}
+
+function showTargetSelection(buyer, item){
+  shopTitle.textContent = "誰を休みにしますか？";
+  shopList.innerHTML = "";
+  shopList.style.display = "flex";
+  shopList.style.flexDirection = "column";
+
+  players.forEach((target, idx) => {
+    if(idx !== currentPlayer && !target.lost){
+      const btn = document.createElement('button');
+      btn.className = 'target-btn';
+      btn.textContent = `${target.name} (現在地:${target.total}$)`;
+      btn.onclick = () => {
+        saveState(); 
+        buyer.total -= item.cost;
+        target.skipTurn += 1;
+        showEventCard(`${buyer.name}が${item.name}を使用！${target.name}は1回休み！`);
+        updateUI();
+        shopModal.style.display = 'none';
+      };
+      shopList.appendChild(btn);
+    }
+  });
+
+  const backBtn = document.createElement('button');
+  backBtn.textContent = "戻る";
+  backBtn.style.marginTop = "10px";
+  backBtn.onclick = openShop; 
+  shopList.appendChild(backBtn);
+}
+
+shopBtn.addEventListener('click', openShop);
+shopClose.addEventListener('click', () => { shopModal.style.display = 'none'; });
+
+updateUI();
+// キーボードショートカットの実装
+document.addEventListener('keydown', (event) => {
+  // 入力フォームにフォーカスがある時は無効
+  if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') return;
+
+  const key = event.key.toLowerCase();
+  const isShift = event.shiftKey;
+
+  // Shift + S : ショップ
+  if (isShift && key === 's') {
+    event.preventDefault();
+    if (!shopBtn.disabled) shopBtn.click();
+    return;
+  }
+
+  // S : サイコロ
+  if (key === 's' && !isShift) {
+    if (!rollBtn.disabled) rollBtn.click();
+  }
+
+  // E : イベント
+  if (key === 'e') {
+    if (!eventBtn.disabled) eventBtn.click();
+  }
+
+  // N : ターン終了 (ここを修正)
+  if (key === 'n') {
+    if (!endBtn.disabled) {
+      event.preventDefault(); // ブラウザの標準挙動を止める
+      
+      // 重要：ボタンのフォーカスを強制解除（二重実行を防止）
+      endBtn.blur(); 
+      
+      // 直接関数を呼ぶ
+      endTurn(); 
+    }
+  }
+});
+</script>
+</body>
+</html>
