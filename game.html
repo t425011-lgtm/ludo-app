@@ -1113,11 +1113,6 @@ document.head.appendChild(style);
 
 endBtn.onclick = endTurn;
 
-// ボタンにこの新しい endTurn を登録
-endBtn.onclick = endTurn;
-
-endBtn.addEventListener('click',endTurn);
-
 const shopBtn = document.getElementById('shopBtn');
 const shopModal = document.getElementById('shop-modal');
 const shopList = document.getElementById('shop-list');
@@ -1125,11 +1120,11 @@ const shopClose = document.getElementById('shop-close');
 const shopTitle = document.getElementById('shop-title');
 
 const items = [
-  {name: "スニーカー", cost: 4000, desc: "次のサイコロ +1", effect: (p) => { p.buff += 1; }},
-  {name: "ロケット", cost: 10000, desc: "次のサイコロ +3", effect: (p) => { p.buff += 3; }},
-  {name: "万能薬", cost: 3000, desc: "休み・逆走を回復", effect: (p) => { p.skipTurn = 0; p.reverse = 0; }},
-  {name: "妨害電波", cost: 6000, desc: "選んだ人を1回休みにする", effect: null} ,
-  {name: "自在カード",cost: 15000,desc: "1〜6の好きな数だけ進める。",effect: (p) => {openDiceSelection(p);}},
+  {name: "スニーカー", cost: 2000, desc: "次のサイコロ +1", effect: (p) => { p.buff += 1; }},
+  {name: "ロケット", cost: 5000, desc: "次のサイコロ +3", effect: (p) => { p.buff += 3; }},
+  {name: "万能薬", cost: 1500, desc: "休み・逆走を回復", effect: (p) => { p.skipTurn = 0; p.reverse = 0; }},
+  {name: "妨害電波", cost: 3000, desc: "選んだ人を1回休みにする", effect: null} ,
+  {name: "自在カード",cost: 7000,desc: "1〜6の好きな数だけ進める。",effect: (p) => {openDiceSelection(p);}},
 ];
 
 function openShop(){
