@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>4人サイコロゲーム 完全版（合計値表示機能付き）</title>
+<title>4人サイコロゲーム 完全版（イベント常時解放）</title>
 <style>
   .money-particle {
   position: fixed;
@@ -40,8 +40,8 @@ body{height:100%;margin:0;font-family:"Helvetica Neue",Arial,sans-serif;transiti
 .player.lost{opacity:0.4;text-decoration:line-through;}
 .p1{background:linear-gradient(180deg,#ff3131,#fff);}
 .p2{background:linear-gradient(180deg,#38b6ff,#fff);}
-.p3{background:linear-gradient(180deg,#7ed957,#fff);}
-.p4{background:linear-gradient(180deg,#ffde59,#fff);}
+.p3{background:linear-gradient(180deg,#ffde59,#fff);}
+.p4{background:linear-gradient(180deg,#7ed957,#fff);}
 .main-grid{display:grid;grid-template-columns:1fr 380px;gap:18px;align-items:start;}
 .board{display:flex;flex-direction:column;align-items:center;padding:12px;}
 .dice-box{width:260px;height:160px;border-radius:14px;background:var(--card);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;position:relative;}
@@ -171,6 +171,32 @@ body{height:100%;margin:0;font-family:"Helvetica Neue",Arial,sans-serif;}
 }
 .sys-btn:hover { background: #333; transform: translateY(-2px); }
 .sys-btn:active { transform: translateY(0); }
+
+/* ランキングリストのスタイル */
+.rank-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 15px;
+  border-radius: 12px;
+  background: #f9f9f9;
+  border: 2px solid #eee;
+  font-weight: bold;
+  font-size: 18px;
+}
+.rank-1 { background: linear-gradient(90deg, #fff, #fffde7); border-color: #ffd700; color: #d4af37; transform: scale(1.05); box-shadow: 0 4px 15px rgba(255, 215, 0, 0.3); z-index: 2; }
+.rank-2 { border-color: #c0c0c0; color: #757575; }
+.rank-3 { border-color: #cd7f32; color: #a05a2c; }
+.rank-lost { opacity: 0.6; background: #ddd; text-decoration: line-through; }
+
+.rank-badge { font-size: 24px; width: 40px; }
+.rank-name { flex: 1; text-align: left; padding-left: 10px; }
+.rank-money { font-size: 22px; font-weight: 900; }
+.rank-status { font-size: 12px; padding: 2px 6px; border-radius: 4px; margin-left: 8px; color: #fff; background: #999;}
+.st-goal { background: #ff9800; }
+.st-survivor { background: #4CAF50; }
+.st-lost { background: #f44336; }
+
 </style>
 </head>
 <body>
@@ -295,6 +321,15 @@ body{height:100%;margin:0;font-family:"Helvetica Neue",Arial,sans-serif;}
   </div>
 </div>
 
+<div id="ranking-modal" style="position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.85);display:none;align-items:center;justify-content:center;z-index:11000;backdrop-filter:blur(5px);">
+  <div style="background:#fff;padding:30px;border-radius:20px;width:95%;max-width:600px;text-align:center;box-shadow:0 0 50px rgba(255, 215, 0, 0.4);border:4px solid #ffd700;">
+    <h2 style="font-size:32px;margin:0 0 20px 0;color:#333;text-shadow:1px 1px 0 #ddd;">🏆 最終結果発表 🏆</h2>
+    <ul id="ranking-list" style="list-style:none;padding:0;margin:0 0 25px 0;display:flex;flex-direction:column;gap:10px;">
+      </ul>
+    <button id="final-restart-btn" class="big-btn" style="background:#4CAF50;color:#fff;font-size:20px;width:100%;">次のゲームへ</button>
+  </div>
+</div>
+
 </div>
 
 <script>
@@ -361,7 +396,7 @@ function saveState() {
     rankCounter: rankCounter,
     isExtraRoll: isExtraRoll,
     rollDisabled: rollBtn.disabled,
-    eventDisabled: eventBtn.disabled
+    eventDisabled: false // 常にfalse（有効）として保存
   };
   historyStack.push(state);
   redoStack = []; 
@@ -379,7 +414,7 @@ function restoreState(state) {
   isExtraRoll = state.isExtraRoll;
   
   rollBtn.disabled = state.rollDisabled;
-  eventBtn.disabled = state.eventDisabled;
+  eventBtn.disabled = false; // 復元時も常に有効化
   
   updateEconomyDisplay();
   updateUI();
@@ -394,7 +429,7 @@ document.getElementById('undoBtn').addEventListener('click', () => {
         rankCounter: rankCounter,
         isExtraRoll: isExtraRoll,
         rollDisabled: rollBtn.disabled,
-        eventDisabled: eventBtn.disabled
+        eventDisabled: false
     };
     redoStack.push(currentState);
     
@@ -415,7 +450,7 @@ document.getElementById('redoBtn').addEventListener('click', () => {
         rankCounter: rankCounter,
         isExtraRoll: isExtraRoll,
         rollDisabled: rollBtn.disabled,
-        eventDisabled: eventBtn.disabled
+        eventDisabled: false
     };
     historyStack.push(currentState);
 
@@ -446,19 +481,19 @@ const players = [
 // --- クイズの発生確率を約10%にするため、"クイズ！"を3つに増やしました ---
 const events = [
   "もう一度サイコロを振って出た目分戻る","もう一度サイコロを振って出た目分進む","次のターンサイコロ1つ追加",
-  "全部のコマスタートに戻る","コマを１つゴールに進める","次のターン、進むマス×２",
-  "もう一回行動できる","1ターン休み","次のターンだけ他のプレイヤーの攻撃回避",
-  "強奪(次の番のプレイヤーから$800もらえる)","一交換(右隣の人とコマの場所交換)","3ターン逆走",
+  "ゴールマスにあるコマを除いたコマを全部のスタートに戻る","でているコマを１つゴールに進める","次のターン、進むマス×２",
+  "もう一回行動できる","1ターン休み","次のターンだけ他のプレイヤーのキャプチャをうけない",
+  "強奪(次の番のプレイヤーから$800もらえる)","位置交換(右隣の人とコマの場所交換)","3ターン逆走",
   "次のターンサイコロ3つ追加","次のターンサイコロ2つ追加",
   "会社でプロジェクトが成功し、臨時ボーナスが出た、$1000獲得","万引き成功$5000獲得","お金を拾った$800獲得","$フリマアプリで高く売れた$3000獲得","恋人ができた$500獲得","ご祝儀をもらった$900獲得","仮想通貨で大当たり$7000獲得",
   "競馬に負けた$800失う","クレジットカード不正利用$1000失う","クーリングオフに失敗$500失う","玉突き事故足折れた$900失う","詐欺メールに引っかかる$200失う","株失敗$8000失う","ゴールのコマ失う",
-  "クイズ！","クイズ！","クイズ！","宝くじ","宝くじ","宝くじ","宝くじ" // 10% (3/30) の確率で発生
+  "クイズ！","クイズ！","クイズ！","クイズ！","宝くじ","宝くじ","宝くじ","宝くじ" // 10% (3/30) の確率で発生
 ];
 // ------------------------------------------------------------------------------------------
 
 let lotteryInterval;
 let currentLotteryAmount = 0;
-const lotteryValues = [0, 100, 300, 500, 1000, 2000, 3000, 5000, 10000];
+const lotteryValues = [0, 100, 300, 500, 1000, 2000, 3000, 5000, 10000,0,0,0,0,0,0,0,0,0,0,0,0,0,1000,3000,200,1500,0,0,0,0,0,0,];
 
 function startLottery(pIdx) {
   const modal = document.getElementById('lottery-modal');
@@ -470,6 +505,9 @@ function startLottery(pIdx) {
   stopBtn.style.display = 'block';
   okBtn.style.display = 'none';
   display.style.color = "#ffd700"; // 初期の色
+  
+  // イベントボタン無効化解除
+  eventBtn.disabled = false;
 
   // ルーレット回転アニメーション
   lotteryInterval = setInterval(() => {
@@ -509,9 +547,9 @@ function startLottery(pIdx) {
     // 5. メッセージを表示
     showEventCard(`${players[pIdx].name}は宝くじで$${finalAmount}獲得！`);
     
-    // 6. ボタン制御
+    // 6. ボタン制御（イベントボタンは常に有効）
     rollBtn.disabled = true;
-    eventBtn.disabled = true;
+    eventBtn.disabled = false;
   };
 }
 
@@ -604,28 +642,87 @@ function updateUI(){
   turnName.textContent=players[currentPlayer].name;
   document.body.style.backgroundColor = players[currentPlayer].color;
   checkWinner();
+  
+  // UI更新のたびに念のため有効化
+  eventBtn.disabled = false;
 }
 
+// === 既存の checkWinner を削除して、ここから下を貼り付けてください ===
+
 function checkWinner(){
-  const active = players.filter(p=> !p.lost && !p.finished);
-  const survivors = players.filter(p => !p.lost);
+  // まだプレイ中の人（失格しておらず、ゴールもしていない人）
+  const activePlayers = players.filter(p => !p.lost && !p.finished);
   
-  if(active.length === 0 || (survivors.length === 1 && survivors[0].finished)){
-     let maxMoney = -999999;
-     let winner = null;
-     players.forEach(p => {
-       if(!p.lost && p.total > maxMoney){
-         maxMoney = p.total;
-         winner = p;
-       }
-     });
-     if(winner){
-       winnerText.textContent = `資産王: ${winner.name} ($${winner.total})`;
-       winnerModal.style.display='flex';
-     }
+  // ゲーム終了条件:
+  // プレイ中の人が1人以下になった場合 (＝残りの1人以外は全員ゴールか失格した)
+  if (activePlayers.length <= 1) {
+    // 少し遅らせて結果発表
+    setTimeout(() => {
+      showFinalRanking();
+    }, 1000);
   }
 }
 
+// === 新しく追加する関数 ===
+function showFinalRanking() {
+  const modal = document.getElementById('ranking-modal');
+  const list = document.getElementById('ranking-list');
+  list.innerHTML = '';
+
+  // 全員を所持金の多い順にソート
+  const sortedPlayers = [...players].sort((a, b) => {
+    if (b.total !== a.total) return b.total - a.total; // 金額降順
+    if (a.rank > 0 && b.rank > 0) return a.rank - b.rank; // 順位があるなら順位優先
+    return 0;
+  });
+
+  sortedPlayers.forEach((p, index) => {
+    const li = document.createElement('li');
+    let rankClass = '';
+    let icon = '';
+    
+    // 順位ごとの装飾
+    if (index === 0) { rankClass = 'rank-1'; icon = '🥇'; }
+    else if (index === 1) { rankClass = 'rank-2'; icon = '🥈'; }
+    else if (index === 2) { rankClass = 'rank-3'; icon = '🥉'; }
+    else { icon = `${index + 1}位`; }
+    
+    if (p.lost) rankClass += ' rank-lost';
+
+    li.className = `rank-item ${rankClass}`;
+
+    // ステータスバッジ
+    let statusBadge = '';
+    if (p.lost) statusBadge = '<span class="rank-status st-lost">失格</span>';
+    else if (p.finished) statusBadge = '<span class="rank-status st-goal">GOAL</span>';
+    else statusBadge = '<span class="rank-status st-survivor">生存</span>';
+
+    li.innerHTML = `
+      <div class="rank-badge">${icon}</div>
+      <div class="rank-name">
+        ${p.name}
+        ${statusBadge}
+      </div>
+      <div class="rank-money">$${p.total.toLocaleString()}</div>
+    `;
+    list.appendChild(li);
+  });
+
+  // 1位の人がお金を持っていれば紙吹雪演出
+  if(sortedPlayers[0].total > 0){
+      if(typeof spawnMoneyParticle === 'function') spawnMoneyParticle(10000);
+  }
+
+  modal.style.display = 'flex';
+}
+
+// ランキング画面の「次のゲームへ」ボタンの処理を追加
+// (HTML側に id="final-restart-btn" のボタンが必要です)
+document.getElementById('final-restart-btn').addEventListener('click', () => {
+  document.getElementById('ranking-modal').style.display = 'none';
+  // 既存のリセットボタンの処理を呼び出して次のゲームへ
+  restartBtn.click(); 
+});
 restartBtn.addEventListener('click',()=>{
   saveState(); 
   players.forEach(p=>{
@@ -635,7 +732,8 @@ restartBtn.addEventListener('click',()=>{
   diceCount=1;
   rankCounter=1;
   isExtraRoll = false; 
-  rollBtn.disabled = false; eventBtn.disabled = true; 
+  rollBtn.disabled = false; 
+  eventBtn.disabled = false; // 修正：常に有効
   economyMode = 'normal'; updateEconomyDisplay(); 
   winnerModal.style.display='none';
   diceSumEl.textContent = '合計: 0'; // === 追加 ===
@@ -729,12 +827,11 @@ function applyEventEffect(text, p) {
   const isExtraAction = text.includes("分戻る") || text.includes("分進む") || text.includes("もう一回行動");
   if (isExtraAction) {
     rollBtn.disabled = false;
-    eventBtn.disabled = true;
     isExtraRoll = true;
   } else {
     rollBtn.disabled = true;
-    eventBtn.disabled = true;
   }
+  eventBtn.disabled = false; // 修正：常に有効
 }
 
 function startQuiz(playerIndex){
@@ -779,10 +876,11 @@ function startQuiz(playerIndex){
 quizOk.addEventListener('click',()=>{
     quizModal.style.display='none';
     rollBtn.disabled = true;
-    eventBtn.disabled = true;
+    eventBtn.disabled = false; // 修正：常に有効
 });
 
-eventBtn.disabled = true;
+// 初期状態でも有効化
+eventBtn.disabled = false;
 
 rollBtn.addEventListener('click', () => {
   const player = players[currentPlayer];
@@ -813,7 +911,7 @@ rollBtn.addEventListener('click', () => {
     document.getElementById('choice-reroll').onclick = () => {
       modal.style.display = 'none';
       rollBtn.disabled = false; // ボタンを再び有効化
-      eventBtn.disabled = true;
+      eventBtn.disabled = false; // 修正：常に有効
       isExtraRoll = true;
       showEventCard("追加ターン獲得！もう一度振ってください。");
     };
@@ -822,7 +920,7 @@ rollBtn.addEventListener('click', () => {
     document.getElementById('choice-spawn').onclick = () => {
       modal.style.display = 'none';
       rollBtn.disabled = true;
-      eventBtn.disabled = false;
+      eventBtn.disabled = false; // 修正：常に有効
       showEventCard("新しいコマを出庫しました！");
     };
     
@@ -834,12 +932,11 @@ rollBtn.addEventListener('click', () => {
 
   if (isExtraRoll) {
     rollBtn.disabled = true;
-    eventBtn.disabled = true;
     isExtraRoll = false;
   } else {
     rollBtn.disabled = true;
-    eventBtn.disabled = false;
   }
+  eventBtn.disabled = false; // 修正：常に有効
 });
 
 eventBtn.addEventListener('click',()=>{
@@ -907,7 +1004,7 @@ function endTurn() {
     saveState(); 
 
     rollBtn.disabled = false;
-    eventBtn.disabled = true;
+    eventBtn.disabled = false; // 修正：常に有効
     isExtraRoll = false;
     diceSumEl.textContent = '合計: 0'; // === ターン終了時にリセット ===
 
@@ -946,7 +1043,7 @@ function findNextPlayable(offset) {
           nextP.skipTurn--;
           updateUI();
           rollBtn.disabled = true;
-          eventBtn.disabled = true;
+          // eventBtn.disabled = true; // 修正：休み中でもイベントは押せるようにするなら削除
           setTimeout(() => { endTurn(); }, 1500);
           return;
        }
@@ -1096,7 +1193,7 @@ function endTurn() {
   
   isExtraRoll = false;
   rollBtn.disabled = false;
-  eventBtn.disabled = true;
+  eventBtn.disabled = false; // 修正：常に有効
   clearDice();
   if(diceSumEl) diceSumEl.textContent = '合計: 0';
   updateUI();
