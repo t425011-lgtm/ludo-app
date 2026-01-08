@@ -145,6 +145,32 @@
     font-weight: bold;
     margin: 10px 0;
   }
+
+  /* キーボード操作の説明用 */
+  .key-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 15px;
+    margin-top: 10px;
+  }
+  .key-item {
+    display: flex;
+    align-items: center;
+    font-weight: bold;
+    font-size: 14px;
+  }
+  .kbd {
+    display: inline-block;
+    padding: 4px 8px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #f7f7f7;
+    box-shadow: 0 2px 0 rgba(0,0,0,0.1);
+    font-family: monospace;
+    margin-right: 8px;
+    color: #333;
+  }
+
 </style>
 </head>
 <body>
@@ -236,6 +262,26 @@
       <li>ゴールやキャプチャが発生したら、金額パネルで<strong>手動で金額を調整</strong>する。</li>
       <li>ターンが完了したら<strong>「ターン終了」</strong>を押す。</li>
     </ol>
+  </section>
+
+  <section class="card">
+    <h2>💻 キーボードショートカット (PC用)</h2>
+    <p>キーボードを使ってスムーズにゲームを進行できます。</p>
+    
+    <div class="key-list">
+      <div class="key-item">
+        <span class="kbd">S</span> サイコロを振る
+      </div>
+      <div class="key-item">
+        <span class="kbd">E</span> イベント開始
+      </div>
+      <div class="key-item">
+        <span class="kbd">N</span> ターン終了
+      </div>
+      <div class="key-item">
+        <span class="kbd">Shift</span> + <span class="kbd">S</span> ショップを開く
+      </div>
+    </div>
   </section>
 
   <section class="card">

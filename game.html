@@ -40,8 +40,8 @@ body{height:100%;margin:0;font-family:"Helvetica Neue",Arial,sans-serif;transiti
 .player.lost{opacity:0.4;text-decoration:line-through;}
 .p1{background:linear-gradient(180deg,#ff3131,#fff);}
 .p2{background:linear-gradient(180deg,#38b6ff,#fff);}
-.p3{background:linear-gradient(180deg,#ffde59,#fff);}
-.p4{background:linear-gradient(180deg,#7ed957,#fff);}
+.p3{background:linear-gradient(180deg,#7ed957,#fff);}
+.p4{background:linear-gradient(180deg,#ffde59,#fff);}
 .main-grid{display:grid;grid-template-columns:1fr 380px;gap:18px;align-items:start;}
 .board{display:flex;flex-direction:column;align-items:center;padding:12px;}
 .dice-box{width:260px;height:160px;border-radius:14px;background:var(--card);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;position:relative;}
@@ -197,9 +197,63 @@ body{height:100%;margin:0;font-family:"Helvetica Neue",Arial,sans-serif;}
 .st-survivor { background: #4CAF50; }
 .st-lost { background: #f44336; }
 
+/* === 縦向きグラフのスタイル（ここから上書き） === */
+#graph-container {
+  display: flex;
+  justify-content: space-around; /* 均等に配置 */
+  align-items: flex-end; /* 下揃え */
+  height: 180px; /* グラフの高さ */
+  padding: 30px 10px 10px 10px; /* 上に数字用のスペースを空ける */
+  background: rgba(255,255,255,0.6); /* 背景を少し明るく */
+  border-radius: 12px;
+}
+
+.graph-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  height: 100%;
+  width: 100%;
+  position: relative; /* 位置調整の基準 */
+}
+
+.graph-val {
+  font-size: 18px; /* 数字を大きく */
+  font-weight: 900; /* 太文字に */
+  margin-bottom: 5px;
+  text-shadow: 2px 2px 0 #fff, -1px -1px 0 #fff; /* 白い縁取りで見やすく */
+  z-index: 10;
+  transition: all 0.5s ease;
+}
+
+.graph-bar-area {
+  width: 30px; /* 棒の太さ */
+  height: 100%;
+  display: flex;
+  align-items: flex-end; /* 下から伸ばす */
+  background: rgba(0,0,0,0.05); /* バーの軌道を薄く表示 */
+  border-radius: 6px 6px 0 0;
+}
+
+.graph-bar {
+  width: 100%;
+  border-radius: 6px 6px 0 0;
+  transition: height 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); /* ニューッと動く */
+  min-height: 4px; /* 0でも少し見えるように */
+  box-shadow: 0 0 10px rgba(0,0,0,0.2); /* 影をつけて立体的に */
+}
+
+.graph-name {
+  margin-top: 8px;
+  font-weight: 800;
+  font-size: 14px;
+}
+
 </style>
 </head>
 <body>
+
 <div class="wrap">
 
   <div id="economy-panel">
@@ -233,6 +287,11 @@ body{height:100%;margin:0;font-family:"Helvetica Neue",Arial,sans-serif;}
         <button class="big-btn goal-btn" id="goalBtn">🚩 1つゴール (+4000)</button>
         <button class="big-btn finish-btn" id="finishBtn">👑 上がり！ (順位確定)</button>
     </div>
+
+      <div id="money-graph-box" style="width:90%; max-width:600px; margin:10px auto; background:rgba(255,255,255,0.9); padding:10px; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.1);">
+  <div id="graph-container">
+    </div>
+</div>
 
     <div style="width:100%;max-width:520px;margin-top:14px">
       <div class="event-card hidden" id="event-card" role="status" aria-live="polite">
@@ -614,6 +673,7 @@ const winnerText=document.getElementById('winner-text');
 const restartBtn=document.getElementById('restart-btn');
 
 function updateUI(){
+
   for(let i=0;i<players.length;i++){
     const el=document.getElementById('pl-'+(i+1));
     el.classList.remove('lost', 'current', 'finished');
@@ -645,6 +705,7 @@ function updateUI(){
   
   // UI更新のたびに念のため有効化
   eventBtn.disabled = false;
+  updateMoneyGraph();
 }
 
 // === 既存の checkWinner を削除して、ここから下を貼り付けてください ===
@@ -1342,6 +1403,46 @@ document.addEventListener('keydown', (event) => {
     }
   }
 });
+
+// === グラフ更新システム（縦向きバージョン） ===
+function updateMoneyGraph() {
+  const container = document.getElementById('graph-container');
+  if(!container) return; // コンテナがなければ何もしない
+  container.innerHTML = ''; 
+
+  // 最大値計算（グラフの天井を決める）
+  let maxMoney = 3000; // 最低でも3000を基準にする
+  players.forEach(p => {
+    if(p.total > maxMoney) maxMoney = p.total;
+  });
+
+  players.forEach(p => {
+    // 高さ計算（%）
+    let percent = 0;
+    if(p.total > 0) percent = (p.total / maxMoney) * 100;
+    
+    // 数字の色（借金なら赤、それ以外は濃いグレー）
+    const valColor = p.total < 0 ? '#ff3131' : '#333';
+    
+    // プレイヤー名（長い場合は短縮。例: "Player 1" → "P1"）
+    // そのまま出したい場合は p.name を使ってください
+    const shortName = p.name.replace('Player ', 'P'); 
+
+    // 縦グラフ用のHTMLを作成
+    const col = document.createElement('div');
+    col.className = 'graph-col';
+    
+    col.innerHTML = `
+      <div class="graph-val" style="color:${valColor}">$${p.total.toLocaleString()}</div>
+      <div class="graph-bar-area">
+        <div class="graph-bar" style="height:${percent}%; background:${p.color};"></div>
+      </div>
+      <div class="graph-name" style="color:${p.color}">${shortName}</div>
+    `;
+    container.appendChild(col);
+  });
+}
+
 </script>
 </body>
 </html>
