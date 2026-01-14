@@ -40,8 +40,8 @@ body{height:100%;margin:0;font-family:"Helvetica Neue",Arial,sans-serif;transiti
 .player.lost{opacity:0.4;text-decoration:line-through;}
 .p1{background:linear-gradient(180deg,#ff3131,#fff);}
 .p2{background:linear-gradient(180deg,#38b6ff,#fff);}
-.p3{background:linear-gradient(180deg,#7ed957,#fff);}
-.p4{background:linear-gradient(180deg,#ffde59,#fff);}
+.p3{background:linear-gradient(180deg,#ffde59,#fff);}
+.p4{background:linear-gradient(180deg,#7ed957,#fff);}
 .main-grid{display:grid;grid-template-columns:1fr 380px;gap:18px;align-items:start;}
 .board{display:flex;flex-direction:column;align-items:center;padding:12px;}
 .dice-box{width:260px;height:160px;border-radius:14px;background:var(--card);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:center;position:relative;}
@@ -129,24 +129,6 @@ button:disabled {
 .rec-no {background:#f44336;}
 
 body{height:100%;margin:0;font-family:"Helvetica Neue",Arial,sans-serif;}
-/* 経済状況表示パネル */
-#economy-panel {
-  background: rgba(255,255,255,0.9);
-  padding: 8px 16px;
-  border-radius: 20px;
-  margin-bottom: 10px;
-  text-align: center;
-  font-weight: bold;
-  box-shadow: var(--shadow);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  border: 2px solid #333;
-  transition: background 0.5s ease;
-  border: 3px solid #333;
-}
-#economy-icon { font-size: 24px; }
 
 /* 誤作動対策コントロール（位置をターン終了の下へ変更） */
 .system-controls {
@@ -197,69 +179,114 @@ body{height:100%;margin:0;font-family:"Helvetica Neue",Arial,sans-serif;}
 .st-survivor { background: #4CAF50; }
 .st-lost { background: #f44336; }
 
-/* === 縦向きグラフのスタイル（ここから上書き） === */
+/* === 追加：マネーグラフ用のスタイル === */
+#money-graph-box {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: var(--shadow);
+  margin-bottom: 15px;
+  position: relative;
+}
+
 #graph-container {
   display: flex;
-  justify-content: space-around; /* 均等に配置 */
-  align-items: flex-end; /* 下揃え */
-  height: 180px; /* グラフの高さ */
-  padding: 30px 10px 10px 10px; /* 上に数字用のスペースを空ける */
-  background: rgba(255,255,255,0.6); /* 背景を少し明るく */
-  border-radius: 12px;
+  justify-content: space-around;
+  align-items: flex-end;
+  height: 250px; /* グラフの高さ */
+  border-bottom: 3px solid #444;
+  padding-bottom: 5px;
+  position: relative;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 49px,
+    rgba(0, 0, 0, 0.1) 50px /* 5万までなのでメモリ線を引く */
+  );
+}
+
+/* 目盛り線（1万、2万...） */
+.graph-guide-line {
+  position: absolute;
+  width: 100%;
+  border-top: 1px dashed rgba(0,0,0,0.2);
+  left: 0;
+  font-size: 10px;
+  color: #666;
 }
 
 .graph-col {
+  width: 18%;
   display: flex;
   flex-direction: column;
-  align-items: center;
   justify-content: flex-end;
+  align-items: center;
   height: 100%;
-  width: 100%;
-  position: relative; /* 位置調整の基準 */
-}
-
-.graph-val {
-  font-size: 18px; /* 数字を大きく */
-  font-weight: 900; /* 太文字に */
-  margin-bottom: 5px;
-  text-shadow: 2px 2px 0 #fff, -1px -1px 0 #fff; /* 白い縁取りで見やすく */
-  z-index: 10;
-  transition: all 0.5s ease;
-}
-
-.graph-bar-area {
-  width: 30px; /* 棒の太さ */
-  height: 100%;
-  display: flex;
-  align-items: flex-end; /* 下から伸ばす */
-  background: rgba(0,0,0,0.05); /* バーの軌道を薄く表示 */
-  border-radius: 6px 6px 0 0;
+  position: relative;
 }
 
 .graph-bar {
   width: 100%;
   border-radius: 6px 6px 0 0;
-  transition: height 0.8s cubic-bezier(0.2, 0.8, 0.2, 1); /* ニューッと動く */
-  min-height: 4px; /* 0でも少し見えるように */
-  box-shadow: 0 0 10px rgba(0,0,0,0.2); /* 影をつけて立体的に */
+  transition: height 0.6s cubic-bezier(0.25, 1, 0.5, 1); /* なめらかに動く */
+  position: relative;
+  min-height: 0px;
+  box-shadow: 0 -2px 5px rgba(0,0,0,0.2) inset;
+}
+
+.graph-val {
+  position: absolute;
+  top: -24px; /* 棒の上に数値を表示 */
+  left: 50%;
+  transform: translateX(-50%);
+  font-weight: 900;
+  font-size: 14px;
+  color: #333;
+  text-shadow: 1px 1px 0 #fff, -1px -1px 0 #fff, 1px -1px 0 #fff;
+  white-space: nowrap;
+  z-index: 2;
 }
 
 .graph-name {
-  margin-top: 8px;
-  font-weight: 800;
-  font-size: 14px;
+  margin-top: 5px;
+  font-size: 11px;
+  font-weight: bold;
+  text-align: center;
+  color: #444;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  width: 100%;
+}
+#money-graph-box {
+  /* 名前を表示するための余白を下に確保 */
+  padding-bottom: 35px !important; 
+}
+
+#graph-container {
+  /* 枠からはみ出した名前を表示許可 */
+  overflow: visible !important; 
+}
+
+.graph-col {
+  /* バーだけになるので、底辺にきっちり合わせる */
+  justify-content: flex-end !important; 
+}
+
+.graph-name {
+  /* 名前をグラフ領域の外（下）に強制移動 */
+  position: absolute !important;
+  bottom: -25px !important;
+  left: 0;
+  width: 100%;
+  height: 20px;
+  line-height: 20px;
 }
 
 </style>
 </head>
 <body>
-
 <div class="wrap">
-
-  <div id="economy-panel">
-    <span id="economy-icon">☀️</span>
-    <span id="economy-text">経済状況: 平穏</span>
-  </div>
 
 <div class="players" id="players">
   <div class="player p1 current" id="pl-1"><div class="name" id="plname-0">Player 1</div><div class="meta">色: 赤</div><div class="buff" id="buff-1"></div></div>
@@ -288,11 +315,6 @@ body{height:100%;margin:0;font-family:"Helvetica Neue",Arial,sans-serif;}
         <button class="big-btn finish-btn" id="finishBtn">👑 上がり！ (順位確定)</button>
     </div>
 
-      <div id="money-graph-box" style="width:90%; max-width:600px; margin:10px auto; background:rgba(255,255,255,0.9); padding:10px; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.1);">
-  <div id="graph-container">
-    </div>
-</div>
-
     <div style="width:100%;max-width:520px;margin-top:14px">
       <div class="event-card hidden" id="event-card" role="status" aria-live="polite">
         <div>
@@ -313,7 +335,67 @@ body{height:100%;margin:0;font-family:"Helvetica Neue",Arial,sans-serif;}
 
   </section>
 
-  <aside class="money-panel"></aside>
+  <aside class="money-panel" style="display:flex; flex-direction:column; gap:15px;">
+  
+  <div id="money-graph-box" style="
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 12px;
+      padding: 10px 10px 35px 10px; /* 下に余白を確保して文字被りを防ぐ */
+      box-shadow: 0 8px 20px rgba(0,0,0,0.18);
+      border: 2px solid #444;
+      box-sizing: border-box;
+      width: 100%;
+    ">
+    <h3 style="margin:0 0 10px 0;text-align:center;font-size:15px;">📊 資産推移 (Max $50,000)</h3>
+    
+    <div id="graph-container" style="
+        display: flex;
+        justify-content: space-around;
+        align-items: flex-end;
+        height: 200px;
+        border-bottom: 3px solid #333;
+        position: relative;
+        background: repeating-linear-gradient(0deg, transparent, transparent 19.5%, rgba(0, 0, 0, 0.1) 20%);
+        overflow: visible; /* 文字がはみ出ても切れないようにする */
+      ">
+      
+      <div class="graph-guide" style="position:absolute; left:0; width:100%; border-top:1px dashed rgba(0,0,0,0.3); font-size:10px; color:#555; pointer-events:none; bottom: 20%;">10k</div>
+      <div class="graph-guide" style="position:absolute; left:0; width:100%; border-top:1px dashed rgba(0,0,0,0.3); font-size:10px; color:#555; pointer-events:none; bottom: 40%;">20k</div>
+      <div class="graph-guide" style="position:absolute; left:0; width:100%; border-top:1px dashed rgba(0,0,0,0.3); font-size:10px; color:#555; pointer-events:none; bottom: 60%;">30k</div>
+      <div class="graph-guide" style="position:absolute; left:0; width:100%; border-top:1px dashed rgba(0,0,0,0.3); font-size:10px; color:#555; pointer-events:none; bottom: 80%;">40k</div>
+
+      <div class="graph-col" style="width:20%; height:100%; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; position:relative;">
+        <div class="graph-bar" id="g-bar-0" style="width:100%; border-radius:4px 4px 0 0; transition:height 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); min-height:0; position:relative; box-shadow:inset -2px -2px 5px rgba(0,0,0,0.2); background:#ff5858; height:2%;">
+          <div class="graph-val" id="g-val-0" style="position:absolute; top:-20px; width:150%; margin-left:-25%; text-align:center; font-weight:900; font-size:12px; text-shadow:1px 1px 0 #fff,-1px -1px 0 #fff; z-index:2; color:#333;">$1000</div>
+        </div>
+        <div class="graph-name" style="position:absolute; bottom:-25px; left:0; width:100%; height:20px; line-height:20px; font-size:11px; font-weight:bold; text-align:center; white-space:nowrap;">P1</div>
+      </div>
+
+      <div class="graph-col" style="width:20%; height:100%; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; position:relative;">
+        <div class="graph-bar" id="g-bar-1" style="width:100%; border-radius:4px 4px 0 0; transition:height 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); min-height:0; position:relative; box-shadow:inset -2px -2px 5px rgba(0,0,0,0.2); background:#4da6ff; height:2%;">
+          <div class="graph-val" id="g-val-1" style="position:absolute; top:-20px; width:150%; margin-left:-25%; text-align:center; font-weight:900; font-size:12px; text-shadow:1px 1px 0 #fff,-1px -1px 0 #fff; z-index:2; color:#333;">$1000</div>
+        </div>
+        <div class="graph-name" style="position:absolute; bottom:-25px; left:0; width:100%; height:20px; line-height:20px; font-size:11px; font-weight:bold; text-align:center; white-space:nowrap;">P2</div>
+      </div>
+
+      <div class="graph-col" style="width:20%; height:100%; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; position:relative;">
+        <div class="graph-bar" id="g-bar-2" style="width:100%; border-radius:4px 4px 0 0; transition:height 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); min-height:0; position:relative; box-shadow:inset -2px -2px 5px rgba(0,0,0,0.2); background:#7df07e; height:2%;">
+          <div class="graph-val" id="g-val-2" style="position:absolute; top:-20px; width:150%; margin-left:-25%; text-align:center; font-weight:900; font-size:12px; text-shadow:1px 1px 0 #fff,-1px -1px 0 #fff; z-index:2; color:#333;">$1000</div>
+        </div>
+        <div class="graph-name" style="position:absolute; bottom:-25px; left:0; width:100%; height:20px; line-height:20px; font-size:11px; font-weight:bold; text-align:center; white-space:nowrap;">P3</div>
+      </div>
+
+      <div class="graph-col" style="width:20%; height:100%; display:flex; flex-direction:column; justify-content:flex-end; align-items:center; position:relative;">
+        <div class="graph-bar" id="g-bar-3" style="width:100%; border-radius:4px 4px 0 0; transition:height 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); min-height:0; position:relative; box-shadow:inset -2px -2px 5px rgba(0,0,0,0.2); background:#ffd86b; height:2%;">
+          <div class="graph-val" id="g-val-3" style="position:absolute; top:-20px; width:150%; margin-left:-25%; text-align:center; font-weight:900; font-size:12px; text-shadow:1px 1px 0 #fff,-1px -1px 0 #fff; z-index:2; color:#333;">$1000</div>
+        </div>
+        <div class="graph-name" style="position:absolute; bottom:-25px; left:0; width:100%; height:20px; line-height:20px; font-size:11px; font-weight:bold; text-align:center; white-space:nowrap;">P4</div>
+      </div>
+
+    </div>
+  </div>
+
+  </aside>
 </div>
 
 <div id="recovery-modal">
@@ -451,7 +533,6 @@ function saveState() {
   const state = {
     players: JSON.parse(JSON.stringify(players)),
     currentPlayer: currentPlayer,
-    economyMode: economyMode,
     rankCounter: rankCounter,
     isExtraRoll: isExtraRoll,
     rollDisabled: rollBtn.disabled,
@@ -468,14 +549,12 @@ function restoreState(state) {
   });
   
   currentPlayer = state.currentPlayer;
-  economyMode = state.economyMode;
   rankCounter = state.rankCounter;
   isExtraRoll = state.isExtraRoll;
   
   rollBtn.disabled = state.rollDisabled;
   eventBtn.disabled = false; // 復元時も常に有効化
-  
-  updateEconomyDisplay();
+
   updateUI();
 }
 
@@ -484,7 +563,7 @@ document.getElementById('undoBtn').addEventListener('click', () => {
     const currentState = {
         players: JSON.parse(JSON.stringify(players)),
         currentPlayer: currentPlayer,
-        economyMode: economyMode,
+
         rankCounter: rankCounter,
         isExtraRoll: isExtraRoll,
         rollDisabled: rollBtn.disabled,
@@ -505,7 +584,6 @@ document.getElementById('redoBtn').addEventListener('click', () => {
     const currentState = {
         players: JSON.parse(JSON.stringify(players)),
         currentPlayer: currentPlayer,
-        economyMode: economyMode,
         rankCounter: rankCounter,
         isExtraRoll: isExtraRoll,
         rollDisabled: rollBtn.disabled,
@@ -524,7 +602,6 @@ document.getElementById('redoBtn').addEventListener('click', () => {
 // --- 既存ロジック ---
 
 let isExtraRoll = false;
-let economyMode = 'normal'; 
 let rankCounter = 1; 
 const rankBonuses = [0, 10000, 8000, 5000, 2000];
 
@@ -586,10 +663,6 @@ function startLottery(pIdx) {
     saveState(); // 履歴に保存
     
     let finalAmount = currentLotteryAmount;
-    
-    // 1. 経済状況（インフレ・デフレ）を反映させる
-    if(economyMode === 'inflation') finalAmount *= 2;
-    if(economyMode === 'deflation') finalAmount = Math.floor(finalAmount / 2);
     
     // 2. プレイヤーの所持金を増やす
     players[pIdx].total += finalAmount;
@@ -705,7 +778,36 @@ function updateUI(){
   
   // UI更新のたびに念のため有効化
   eventBtn.disabled = false;
-  updateMoneyGraph();
+  // --- updateUI関数の中にこれを追加 ---
+  
+  // グラフ更新ロジック
+  const maxGraphVal = 50000; // グラフの最大値
+  for(let i=0; i<players.length; i++){
+    const p = players[i];
+    const bar = document.getElementById('g-bar-' + i);
+    const valText = document.getElementById('g-val-' + i);
+    
+    // 金額表示更新
+    valText.textContent = '$' + p.total.toLocaleString();
+    
+    // 高さ計算 (パーセンテージ)
+    // マイナスなら0%、5万を超えたら100%で止める（突き抜けないようにする）
+    let percentage = (p.total / maxGraphVal) * 100;
+    if (percentage < 0) percentage = 0;
+    if (percentage > 100) percentage = 100;
+    
+    bar.style.height = percentage + '%';
+    bar.style.backgroundColor = p.color; // プレイヤーの色を反映
+    
+    // 借金時は赤文字にするなどの装飾
+    if(p.total < 0) {
+        valText.style.color = 'red';
+        bar.style.borderTop = "4px solid red"; // 借金時は棒の上に赤い線を出す
+    } else {
+        valText.style.color = '#333';
+        bar.style.borderTop = "none";
+    }
+  }
 }
 
 // === 既存の checkWinner を削除して、ここから下を貼り付けてください ===
@@ -795,7 +897,6 @@ restartBtn.addEventListener('click',()=>{
   isExtraRoll = false; 
   rollBtn.disabled = false; 
   eventBtn.disabled = false; // 修正：常に有効
-  economyMode = 'normal'; updateEconomyDisplay(); 
   winnerModal.style.display='none';
   diceSumEl.textContent = '合計: 0'; // === 追加 ===
   updateUI();
@@ -806,9 +907,7 @@ function clearDice(){diceAreaEl.innerHTML='';}
 function showDiceRoll(n){
   clearDice();
   let actualN = n;
-  if(economyMode === 'burst') actualN = Math.max(1, actualN - 1);
-  if(economyMode === 'ice') actualN = Math.max(1, actualN - 1);
-  if(economyMode === 'wind') actualN += 1;
+
   
   let totalVal = 0; // 合計値変数
 
@@ -822,7 +921,6 @@ function showDiceRoll(n){
     diceAreaEl.appendChild(img);
     ((el,delay)=>{setTimeout(()=>{el.style.transition='transform .45s cubic-bezier(.2,.8,.2,1)'; el.style.transform='translateY(0) rotate(0) scale(1)';}, delay);})(img,i*90);
   }
-  if(economyMode === 'burst' && n > actualN) showEventCard("バブル崩壊中！サイコロが減りました！");
   
   diceSumEl.textContent = '合計: ' + totalVal; // === 合計値を画面に表示 ===
   
@@ -861,15 +959,6 @@ function applyEventEffect(text, p) {
   const m = text.match(/([0-9]{1,7})/);
   if (m) {
     let num = parseInt(m[1], 10);
-    
-    // 経済状況（景気）による変動
-    if (economyMode === 'inflation') {
-      num *= 2;
-      text += " (インフレx2!)";
-    } else if (economyMode === 'deflation') {
-      num = Math.floor(num / 2);
-      text += " (デフレ/2...)";
-    }
 
     // お金の増減とパーティクル表示
     if (text.includes('獲得')) {
@@ -1032,35 +1121,6 @@ finishBtn.addEventListener('click', ()=>{
   updateUI();
 });
 
-
-const economyData = {
-  normal: {name:"平穏", bg:"#7bd24a", icon:"☀️"},
-  inflation: {name:"インフレ (金額2倍)", bg:"#ffeb3b", icon:"📈"},
-  deflation: {name:"デフレ (金額半減)", bg:"#cfd8dc", icon:"📉"},
-  burst: {name:"バブル崩壊 (10%没収)", bg:"#7b1fa2", icon:"😱"}
-};
-
-function updateEconomyDisplay(){
-  const w = economyData[economyMode];
-  const panel = document.getElementById('economy-panel'); // パネル要素を取得
-  
-  document.getElementById('economy-icon').textContent = w.icon;
-  document.getElementById('economy-text').textContent = "経済状況: " + w.name;
-  
-  // パネルの背景色だけを書き換える
-  panel.style.backgroundColor = w.bg;
-}
-
-function checkEconomyChange(){
-  if(Math.random() < 0.2){
-    const keys = Object.keys(economyData);
-    const nextKey = keys[Math.floor(Math.random() * keys.length)];
-    economyMode = nextKey;
-    updateEconomyDisplay();
-    showEventCard(`⚠️ 経済状況が「${economyData[nextKey].name}」に変わりました！`);
-  }
-}
-
 function endTurn() {
     saveState(); 
 
@@ -1070,14 +1130,10 @@ function endTurn() {
     diceSumEl.textContent = '合計: 0'; // === ターン終了時にリセット ===
 
     if(players[currentPlayer].reverse > 0) players[currentPlayer].reverse--;
-    if(economyMode === 'burst' && !players[currentPlayer].lost && players[currentPlayer].total > 0){
-       players[currentPlayer].total = Math.floor(players[currentPlayer].total * 0.9);
-    }
     proceedToNextPlayer();
 }
 
 function proceedToNextPlayer() {
-    checkEconomyChange();
     findNextPlayable(1);
 }
 
@@ -1190,59 +1246,233 @@ function endTurn() {
       (prev.total < curr.total) ? prev : curr, activePlayers[0]
     );
 
-    // テスト用に1.0 (100%)。本番は0.03に。
-    if (Math.random() < 0.03 && currentPlayerObj === lowestPlayer) {
+    // テスト用に確率を変えたい場合はここを調整 (例: 0.03 -> 1.0)
+    if (Math.random() < 0.1 && currentPlayerObj === lowestPlayer) {
       saveState();
-      
-      // --- 演出：大迫力の天使降臨 ---
-      const bonus = 30000;
-      currentPlayerObj.total += bonus;
 
-      // 1. 巨大な天使の羽根を背景に表示
+      // --- 1. クイズデータの定義（10択・激ムズ30問） ---
+      const quizzes = [
+        // =========== 数学（絶望の数値） ===========
+        { q: "【数学】未解決問題「リーマン予想」。ゼータ関数の非自明な零点の実部は、全ていくつであると予想されている？", choices: ["0", "1", "1/2", "1/3", "1/4", "2/3", "3/4", "-1", "∞", "存在しない"], correct: 2 },
+        { q: "【数学】「0の階乗（0!）」の答えは？", choices: ["0", "1", "00", "10", "-1", "∞", "未定義", "φ", "i", "e"], correct: 1 },
+        { q: "【数学】円周率（π）の小数第10位の数字は？", choices: ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"], correct: 5 },
+        { q: "【数学】正二十面体の頂点の数はいくつ？", choices: ["4", "6", "8", "10", "12", "14", "16", "20", "24", "30"], correct: 4 },
+        { q: "【数学】「フェルマーの最終定理」を証明した数学者は？", choices: ["オイラー", "ガウス", "ワイルズ", "フェルマー", "リーマン", "ラマヌジャン", "ポアンカレ", "ヒルベルト", "ニュートン", "カントール"], correct: 2 },
+        { q: "【数学】「1+2+3+4+...」と無限に足していくと、解析接続においてどのような値になるとされる？", choices: ["∞", "0", "-1", "-1/12", "1/2", "π", "e", "i", "-1/2", "未定義"], correct: 3 },
+        { q: "【数学】ミレニアム懸賞問題のうち、唯一解決された問題はどれ？", choices: ["P≠NP予想", "ホッジ予想", "ポアンカレ予想", "リーマン予想", "ヤン-ミルズ方程式", "ナビエ-ストークス方程式", "バーチ・SwD予想", "フェルマーの最終定理", "四色定理", "ゴールドバッハ予想"], correct: 2 },
+        { q: "【数学】フィボナッチ数列。1, 1, 2, 3, 5, 8, 13, 21... 次に来る数は？", choices: ["28", "30", "31", "32", "33", "34", "35", "36", "38", "42"], correct: 5 },
+        { q: "【数学】グラハム数などを表す際に使われる、巨大数の表記法は？", choices: ["クヌースの矢印表記", "コンウェイのチェーン表記", "アッカーマン関数", "ボーア・モレルップの定理", "スターリングの公式", "オイラーの公式", "ラグランジュの未定乗数法", "ゲーデルの不完全性定理", "チューリングマシン", "カントールの対角線論法"], correct: 0 },
+
+        // =========== 地理（引っかけとマニアック） ===========
+        { q: "【地理】世界に2つしかない「二重内陸国」。リヒテンシュタインともう一つは？", choices: ["パラグアイ", "ボリビア", "モンゴル", "カザフスタン", "ウズベキスタン", "アフガニスタン", "キルギス", "タジキスタン", "スイス", "ネパール"], correct: 4 },
+        { q: "【地理】スリランカの首都は？", choices: ["コロンボ", "キャンディ", "ゴール", "ジャフナ", "スリジャヤワルダナプラコッテ", "ヌワラエリヤ", "ハンバントタ", "アヌラダプラ", "トリンコマリー", "バッティカロア"], correct: 4 },
+        { q: "【地理】アフリカ大陸で最も面積が大きい国は？（2025年現在）", choices: ["スーダン", "アルジェリア", "コンゴ民主共和国", "リビア", "チャド", "ニジェール", "南アフリカ", "エジプト", "マリ", "アンゴラ"], correct: 1 },
+        { q: "【地理】世界で最も島が多い国はどこ？", choices: ["日本", "フィリピン", "インドネシア", "スウェーデン", "ノルウェー", "フィンランド", "カナダ", "ギリシャ", "オーストラリア", "モルディブ"], correct: 3 },
+        { q: "【地理】ユーラシア大陸の「到達不能極（海から最も遠い地点）」がある国は？", choices: ["中国", "モンゴル", "ロシア", "カザフスタン", "キルギス", "タジキスタン", "アフガニスタン", "パキスタン", "インド", "イラン"], correct: 0 },
+        { q: "【地理】世界で唯一「首都が存在しない（法律上の定めがない）」とされる国は？", choices: ["バチカン", "モナコ", "ナウル", "ツバル", "パラオ", "シンガポール", "サンマリノ", "スイス", "イスラエル", "日本"], correct: 2 },
+        { q: "【地理】フランスの海外県を含めると、フランスにはいくつのタイムゾーンがある？（世界最多）", choices: ["1", "3", "5", "7", "9", "10", "12", "15", "20", "24"], correct: 6 },
+        { q: "【地理】世界一長い地名として知られる丘。「タウマタファカタンギハンガコアウアウ...」どこの国？", choices: ["オーストラリア", "ニュージーランド", "ウェールズ", "南アフリカ", "タイ", "アイスランド", "フィンランド", "マダガスカル", "ハワイ", "カナダ"], correct: 1 },
+        { q: "【地理】日本最東端の島は？", choices: ["与那国島", "沖ノ鳥島", "南鳥島", "択捉島", "国後島", "父島", "硫黄島", "波照間島", "対馬", "佐渡島"], correct: 2 },
+        { q: "【地理】「イスタンブール」の旧名は？", choices: ["コンスタンティノープル", "ビザンティウム", "アンカラ", "スミュルナ", "アドリアノープル", "アレクサンドリア", "カルタゴ", "トロイ", "ペルセポリス", "バビロン"], correct: 0 },
+        { q: "【地理】世界一深い海溝「マリアナ海溝」の最深部チャレンジャー海淵の深さは約？", choices: ["5,000m", "7,000m", "8,848m", "10,911m", "12,000m", "15,000m", "20,000m", "3,776m", "6,300m", "99,999m"], correct: 3 },
+
+        // =========== 歴史（時空の迷宮） ===========
+        { q: "【歴史】英仏間の「百年戦争」。実際は何年間続いた？", choices: ["98年", "99年", "100年", "101年", "105年", "110年", "115年", "116年", "120年", "130年"], correct: 7 },
+        { q: "【歴史】歴史上、最も短かった戦争「アングロ・ザンジバル戦争」の時間は？", choices: ["約5分", "約15分", "約25分", "約40分", "約1時間", "約2時間", "約1日", "約3日", "約1週間", "約1ヶ月"], correct: 3 },
+        { q: "【歴史】江戸幕府最後の将軍・徳川慶喜が大政奉還を行った場所は？", choices: ["江戸城", "大阪城", "二条城", "名古屋城", "駿府城", "彦根城", "姫路城", "聚楽第", "伏見城", "安土城"], correct: 2 },
+        { q: "【歴史】中国のラストエンペラー「愛新覚羅溥儀」。宣統帝の次の即位名は？", choices: ["康徳帝", "光緒帝", "同治帝", "咸豊帝", "道光帝", "嘉慶帝", "乾隆帝", "雍正帝", "康熙帝", "順治帝"], correct: 0 },
+        { q: "【歴史】1912年、タイタニック号が出航した港は？", choices: ["ロンドン", "リバプール", "サウサンプトン", "ポーツマス", "プリマス", "ブリストル", "グラスゴー", "ベルファスト", "ダブリン", "シェルブール"], correct: 2 },
+        { q: "【歴史】江戸幕府、第15代将軍（最後の将軍）は慶喜。では初代は家康。第3代は？", choices: ["秀忠", "家光", "綱吉", "吉宗", "家茂", "家定", "家継", "家達", "家宣", "慶喜"], correct: 1 },
+        { q: "【歴史】「本能寺の変」が起きたのは西暦何年？", choices: ["1192年", "1467年", "1543年", "1560年", "1582年", "1600年", "1603年", "1615年", "1868年", "1945年"], correct: 4 },
+        { q: "【歴史】世界で最も戦争による死者数が多かったとされる紛争は？", choices: ["第一次世界大戦", "第二次世界大戦", "モンゴルの征服戦争", "太平天国の乱", "国共内戦", "ナポレオン戦争", "三十年戦争", "百年戦争", "十字軍", "関ヶ原の戦い"], correct: 1 },
+        { q: "【歴史】アメリカ合衆国初代大統領はワシントン。では第16代は？", choices: ["ジェファーソン", "アダムズ", "ジャクソン", "リンカーン", "グラント", "ルーズベルト", "ケネディ", "ニクソン", "オバマ", "トランプ"], correct: 3 },
+        { q: "【歴史】日本で最も在職期間が短かった内閣総理大臣は？（54日間）", choices: ["東久邇宮稔彦王", "羽田孜", "石橋湛山", "宇野宗佑", "村山富市", "細川護熙", "鳩山由紀夫", "麻生太郎", "森喜朗", "犬養毅"], correct: 0 },
+        { q: "【歴史】「賽は投げられた（Alea jacta est）」と言ってルビコン川を渡ったのは？", choices: ["カエサル", "アウグストゥス", "ハンニバル", "アレクサンドロス", "ナポレオン", "クレオパトラ", "ブルータス", "ネロ", "コンスタンティヌス", "スパルタクス"], correct: 0 },
+
+        // =========== 理科（元素と生物の神秘） ===========
+        { q: "【理科】周期表で一番最後（118番）にある元素「Og」の名称は？", choices: ["オガネソン", "ニホニウム", "モスコビウム", "テネシン", "リバモリウム", "フレロビウム", "コペルニシウム", "レントゲニウム", "ダームスタチウム", "マイトネリウム"], correct: 0 },
+        { q: "【理科】絶対零度（0ケルビン）を摂氏に直すと約何度？", choices: ["-100℃", "-200℃", "-273.15℃", "-373.15℃", "-459.67℃", "-40℃", "0℃", "-1℃", "-999℃", "-1000℃"], correct: 2 },
+        { q: "【理科】人間の骨の数（成人）は通常何本と言われる？", choices: ["108", "150", "180", "200", "206", "220", "256", "300", "365", "400"], correct: 4 },
+        { q: "【理科】雲の分類「十種雲形」に含まれない名前は？", choices: ["巻雲", "巻積雲", "巻層雲", "高積雲", "高層雲", "乱層雲", "層積雲", "層雲", "積乱雲", "羊雲"], correct: 9 },
+        { q: "【理科】ルビーを構成する主成分は？", choices: ["酸化アルミニウム", "酸化鉄", "炭化ケイ素", "二酸化ケイ素", "炭素", "酸化クロム", "酸化チタン", "ベリリウム", "酸化銅", "カルシウム"], correct: 0 },
+        { q: "【理科】SI基本単位において、2019年に定義が改定された「キログラム」は何を基準にしている？", choices: ["国際キログラム原器", "水の体積", "プランク定数", "アボガドロ定数", "光速", "セシウム原子の振動", "ボルツマン定数", "電気素量", "シリコン球", "重力加速度"], correct: 2 },
+        { q: "【理科】元素記号「W」。この元素はなに？", choices: ["タングステン", "ウォルフラム", "ワナジウム", "ウェルニウム", "ウィスコンシウム", "キセノン", "クリプトン", "カリウム", "カルシウム", "スズ"], correct: 0 },
+        { q: "【理科】「マツタケ」の人工栽培は非常に困難ですが、その理由はマツタケが何菌だから？", choices: ["腐生菌", "寄生菌", "菌根菌", "酵母菌", "放線菌", "粘菌", "内生菌", "地衣類", "担子菌", "殺菌"], correct: 2 },
+        { q: "【理科】人間のDNAの塩基配列、チンパンジーとの一致率は約何％と言われる？", choices: ["50%", "75%", "88%", "90%", "96%", "98.8%", "99.9%", "100%", "30%", "10%"], correct: 5 },
+        { q: "【理科】宇宙の年齢は、現在の観測でおよそ何億年とされている？", choices: ["46億年", "100億年", "138億年", "150億年", "200億年", "250億年", "300億年", "500億年", "1兆年", "永遠"], correct: 2 },
+
+        // =========== 国語（漢字と読みの迷宮） ===========
+        { q: "【国語】「信天翁」この鳥の読み方は？", choices: ["ペリカン", "コウノトリ", "アホウドリ", "カモメ", "ウミネコ", "フラミンゴ", "ダチョウ", "ハシビロコウ", "ツバメ", "スズメ"], correct: 2 },
+        { q: "【国語】「靉靆」。この熟語の読み方は？", choices: ["あいまい", "あいたい", "ろうばい", "ほうはい", "けんけん", "ごうごう", "そうそう", "めいめい", "ゆうゆう", "しんしん"], correct: 1 },
+        { q: "【国語】「独擅場」。本来の正しい読み方は？", choices: ["どくせんじょう", "どくだんじょう", "ひとりぶたい", "どくそうじょう", "どくさつじょう", "どくえんじょう", "どくさいじょう", "どくしんじょう", "どくぜんじょう", "どくへいじょう"], correct: 0 },
+        { q: "【国語】部首「⻌（しんにょう）」の点は、常用漢字では通常いくつ？", choices: ["なし", "1つ", "2つ", "3つ", "4つ", "5つ", "不定", "書体による", "決まっていない", "点ではない"], correct: 1 },
+        { q: "【国語】「すべからく」の正しい意味は？", choices: ["すべて", "当然～すべき", "なるべく", "おそらく", "すぐに", "少なくとも", "もしかして", "あまねく", "あえて", "ことごとく"], correct: 1 },
+        { q: "【漢字】「海象」。この動物の読み方は？", choices: ["アザラシ", "アシカ", "オットセイ", "セイウチ", "ジュゴン", "マナティ", "ラッコ", "イルカ", "クジラ", "シャチ"], correct: 3 },
+        { q: "【漢字】「微睡む」。この読み方は？", choices: ["たたずむ", "まどろむ", "かすむ", "ほほえむ", "うつむく", "はにかむ", "いさむ", "ひずむ", "うらやむ", "ねたむ"], correct: 1 },
+        { q: "【漢字】最も画数が多い漢字の一つ「たいと（84画）」の構成に含まれない漢字は？", choices: ["雲", "龍", "雷", "雨", "風", "鹿", "興", "貝", "山", "水"], correct: 9 },
+        { q: "【漢字】「孑孑」。この生き物はなに？", choices: ["ボウフラ", "オタマジャクシ", "ミジンコ", "アメンボ", "ヤゴ", "ケムシ", "ウジ", "ミミズ", "ヒル", "ノミ"], correct: 0 },
+        { q: "【国語】夏目漱石の『吾輩は猫である』。書き出しは「吾輩は猫である。名前は...」？", choices: ["タマである", "ミケである", "クロである", "まだ無い", "ポチである", "漱石である", "忘れた", "秘密である", "不明である", "ニャーである"], correct: 3 },
+        { q: "【国語】「青天の霹靂（へきれき）」。霹靂とは元々どういう意味？", choices: ["激しい雨", "急な雷", "強い風", "大きな波", "山崩れ", "日食", "地震", "火事", "爆発", "神の怒り"], correct: 1 },
+
+        // =========== 芸術・音楽・知識（雑学の森） ===========
+        { q: "【知識】QRコードの3隅にある四角いマークの名称は？", choices: ["アライメント", "ファインダ", "タイミング", "ポジション", "ロケーター", "マーカー", "アンカー", "コーナー", "スクエア", "インデックス"], correct: 1 },
+        { q: "【知識】スペードのエースの絵柄が大きい理由は？", choices: ["一番強いから", "納税証明のため", "デザインミス", "インク漏れ", "王様の命令", "紙の節約", "透かしを入れるため", "判子を押すため", "特に理由はない", "偽造防止"], correct: 1 },
+        { q: "【知識】鉛筆の濃さ。「H」は何の略？", choices: ["Hard", "Heavy", "High", "Hot", "Huge", "Hyper", "Hero", "Head", "Hand", "Half"], correct: 0 },
+        { q: "【知識】非常口マークの緑色の名称は？", choices: ["セーフグリーン", "エマージェンシーグリーン", "マンセルグリーン", "シグナルグリーン", "セーフティグリーン", "レスキューグリーン", "ピュアグリーン", "ブライトグリーン", "ネオングリーン", "ライムグリーン"], correct: 2 },
+        { q: "【知識】「不思議の国のアリス」の帽子屋の帽子に書かれている「10/6」の意味は？", choices: ["10月6日生まれ", "10シリング6ペンス", "頭のサイズ", "10分の6", "製造番号", "店番", "ラッキーナンバー", "視力", "時刻", "トランプの数字"], correct: 1 },
+        { q: "【芸術】ムンクの『叫び』。描かれている人物は実は叫んでいない。何をしている？", choices: ["耳を塞いでいる", "あくびをしている", "歌っている", "くしゃみをしている", "歯が痛い", "踊っている", "驚いている", "笑っている", "泣いている", "寝ている"], correct: 0 },
+        { q: "【音楽】ジョン・ケージの楽曲『4分33秒』。この曲の最大の特徴は？", choices: ["テンポが極端に速い", "楽器を使わない", "一切演奏しない（無音）", "4分33秒で終わらない", "観客が演奏する", "叫び声だけ", "超高周波のみ", "1音だけ続く", "逆再生で聴く", "指揮者が踊る"], correct: 2 },
+        { q: "【芸術】サグラダ・ファミリアの主任建築家はガウディですが、彼は何代目？", choices: ["初代", "2代目", "3代目", "4代目", "5代目", "10代目", "実は関係ない", "名誉監督", "助手", "創設者"], correct: 1 },
+        { q: "【IT】HTTPステータスコード「418」が返すメッセージは？", choices: ["Not Found", "Bad Request", "Forbidden", "I'm a teapot", "Internal Server Error", "Service Unavailable", "Gateway Timeout", "Payment Required", "Gone", "Unauthorized"], correct: 3 },
+        { q: "【IT】Linuxのマスコットキャラクターであるペンギンの名前は？", choices: ["リナックス", "ペンペン", "タックス (Tux)", "ピングー", "ハッピー", "リヌス", "ギット", "ジャバ", "パイソン", "ウブントゥ"], correct: 2 },
+        { q: "【IT】「QRコード」のQRは何の略？", choices: ["Quick Response", "Quality Read", "Question Register", "Quad Rect", "Quick Read", "Quantity Record", "Quote Reference", "Query Result", "Quiz Ranking", "Quarter Round"], correct: 0 },
+        { q: "【ゲーム】任天堂のキャラクター「マリオ」の初登場時の名前（通称）は？", choices: ["ジャンプマン", "ミスタービデオ", "オッサン", "ランマン", "レッドマン", "ヒゲマン", "配管工", "マリオ", "ルイージ", "ポパイ"], correct: 0 },
+        { q: "【アニメ】『サザエさん』のタラちゃんの苗字は？", choices: ["磯野", "フグ田", "波野", "伊佐坂", "中島", "穴子", "花沢", "カツオ", "サザエ", "タラオ"], correct: 1 },
+        { q: "【雑学】カジノのルーレット（アメリカ式）。数字を全部足すといくつになる？", choices: ["365", "666", "777", "999", "100", "55", "360", "108", "0", "未定義"], correct: 1 },
+        { q: "【雑学】Googleの社名の由来となった数の単位「googol（グーゴル）」。10の何乗？", choices: ["50乗", "64乗", "100乗", "1000乗", "1億乗", "12乗", "256乗", "512乗", "20乗", "無限"], correct: 2 }
+      ];
+      
+      const quiz = quizzes[Math.floor(Math.random() * quizzes.length)];
+      const bonus = 30000;
+
+      // --- 2. 画面全体を覆う演出レイヤーを作成 ---
       const overlay = document.createElement('div');
-      overlay.style.cssText = `
-        position:fixed; top:0; left:0; width:100%; height:100%;
-        background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(255,215,0,0.3) 100%);
-        z-index:10000; display:flex; align-items:center; justify-content:center;
-        flex-direction:column; animation: fadeInOut 3s forwards; pointer-events:none;
-      `;
-      overlay.innerHTML = `
-        <div style="font-size:120px; filter:drop-shadow(0 0 20px gold); animation: float 1s infinite alternate;">👼</div>
-        <div style="font-size:40px; font-weight:900; color:#d4af37; text-shadow:2px 2px 10px white; margin-top:20px;">
-          DIVINE BLESSING!
+      overlay.style.position = 'fixed';
+      overlay.style.top = '0';
+      overlay.style.left = '0';
+      overlay.style.width = '100%';
+      overlay.style.height = '100%';
+      overlay.style.background = 'rgba(255, 255, 255, 0.98)';
+      overlay.style.zIndex = '10000';
+      overlay.style.display = 'flex';
+      overlay.style.flexDirection = 'column';
+      overlay.style.justifyContent = 'center';
+      overlay.style.alignItems = 'center';
+      overlay.style.animation = 'fadeIn 0.5s';
+      overlay.style.overflowY = 'auto'; // はみ出したらスクロール
+
+      // --- 3. クイズ画面のHTMLを構築 ---
+      const content = document.createElement('div');
+      content.style.textAlign = 'center';
+      content.style.width = '90%';
+      content.style.maxWidth = '800px';
+      content.innerHTML = `
+        <div style="font-size:80px; animation: bounce 2s infinite;">👼</div>
+        <h2 style="color:#d32f2f; margin:0 0 10px 0;">天使の試練（10択）</h2>
+        <p style="font-weight:bold; color:#555; margin-bottom:20px;">正解率10%！ 正解で $${bonus.toLocaleString()}！</p>
+        <div style="background:#fff; border:4px solid #gold; padding:20px; border-radius:15px; box-shadow:0 10px 20px rgba(0,0,0,0.1); margin-bottom:20px;">
+          <h1 style="font-size:20px; margin:0; line-height:1.5;">${quiz.q}</h1>
         </div>
-        <div style="font-size:60px; font-weight:900; color:#fff; -webkit-text-stroke:2px gold;">+$${bonus.toLocaleString()}</div>
       `;
+      overlay.appendChild(content);
+
+      // --- 4. 10択ボタンエリア（★ここが間違いの修正箇所★） ---
+      const btnArea = document.createElement('div');
+      btnArea.style.display = 'flex';
+      btnArea.style.flexWrap = 'wrap';    // ★重要：これで折り返して表示します
+      btnArea.style.justifyContent = 'center'; 
+      btnArea.style.gap = '10px';         
+      btnArea.style.width = '100%';
+
+      // 選択肢ボタンを作成して並べる
+      quiz.choices.forEach((text, index) => {
+        const btn = document.createElement('button');
+        btn.textContent = text;
+        
+        // ★重要：10個並べるためのサイズ調整
+        btn.style.flex = '1 0 18%';       
+        btn.style.minWidth = '130px';     
+        btn.style.padding = '12px 5px';   
+        btn.style.fontSize = '16px';      
+        btn.style.fontWeight = 'bold';
+        btn.style.cursor = 'pointer';
+        btn.style.borderRadius = '8px';
+        btn.style.border = '1px solid #aaa';
+        btn.style.background = '#f0f0f0';
+        btn.style.color = '#333';
+        btn.style.boxShadow = '0 3px 0 #ccc';
+        btn.style.transition = 'transform 0.1s';
+        
+        btn.onmousedown = () => btn.style.transform = 'translateY(3px)';
+        btn.onmouseup   = () => btn.style.transform = 'translateY(0)';
+
+        // ボタンを押した時の処理
+        btn.onclick = () => {
+          // すべてのボタンを無効化
+          const allBtns = btnArea.querySelectorAll('button');
+          allBtns.forEach(b => b.disabled = true);
+
+          if (index === quiz.correct) {
+            // ★ 正解！
+            currentPlayerObj.total += bonus;
+            btn.style.background = '#4CAF50'; 
+            btn.style.color = '#fff';
+            btn.style.borderColor = '#2E7D32';
+            btn.style.boxShadow = 'none';
+            btn.textContent = "⭕ " + text;
+            
+            const msg = document.createElement('div');
+            msg.textContent = `+$${bonus.toLocaleString()}!!`;
+            msg.style.color = '#e91e63';
+            msg.style.fontSize = '40px';
+            msg.style.fontWeight = '900';
+            msg.style.marginTop = '10px';
+            msg.style.animation = 'floatUp 1s ease-out';
+            content.appendChild(msg);
+
+            confettiEffect(); 
+          } else {
+            // ★ 不正解...
+            btn.style.background = '#F44336';
+            btn.style.color = '#fff';
+            btn.style.borderColor = '#C62828';
+            btn.textContent = "❌ " + text;
+            
+            // 正解のボタンを教えてあげる
+            allBtns[quiz.correct].style.background = '#81C784'; 
+            allBtns[quiz.correct].style.color = '#fff';
+          }
+
+          updateUI(); 
+
+          // 2.5秒後に閉じる
+          setTimeout(() => {
+            document.body.removeChild(overlay);
+          }, 2500);
+        };
+
+        btnArea.appendChild(btn);
+      });
+
+      content.appendChild(btnArea);
       document.body.appendChild(overlay);
 
-      // 2. 羽根（パーティクル）を散らす
-      for(let i=0; i<30; i++) {
-        setTimeout(() => {
-          const leaf = document.createElement('div');
-          leaf.textContent = '🕊️';
-          leaf.style.cssText = `
-            position:fixed; left:${Math.random()*100}%; top:-50px; font-size:${20+Math.random()*30}px;
-            z-index:10001; transition: transform 3s linear, top 3s linear; opacity:0.8;
-          `;
-          document.body.appendChild(leaf);
-          setTimeout(() => {
-            leaf.style.top = '110%';
-            leaf.style.transform = `translateX(${(Math.random()-0.5)*200}px) rotate(${Math.random()*360}deg)`;
-          }, 10);
-          setTimeout(() => leaf.remove(), 3000);
-        }, i * 100);
+      // 紙吹雪エフェクト関数
+      function confettiEffect() {
+        for(let k=0; k<50; k++){
+          const p = document.createElement('div');
+          p.style.position = 'fixed';
+          p.style.left = 50 + '%';
+          p.style.top = 50 + '%';
+          p.style.width = '10px';
+          p.style.height = '10px';
+          p.style.backgroundColor = ['#f00','#0f0','#00f','#ff0', '#0ff', '#f0f'][Math.floor(Math.random()*6)];
+          p.style.zIndex = 10001;
+          document.body.appendChild(p);
+          
+          const angle = Math.random() * 360;
+          const dist = Math.random() * 300 + 50;
+          
+          // アニメーション設定
+          p.animate([
+            { transform: 'translate(0,0) rotate(0)', opacity: 1 },
+            { transform: `translate(${Math.cos(angle)*dist}px, ${Math.sin(angle)*dist}px) rotate(${Math.random()*720}deg)`, opacity: 0 }
+          ], {
+            duration: 1000,
+            easing: 'cubic-bezier(0.25, 1, 0.5, 1)'
+          }).onfinish = () => p.remove();
+        }
       }
-
-      // 3. 画面を揺らす（スクリーンシェイク）
-      document.body.style.animation = "shake 0.5s ease-in-out";
-      
-      showEventCard(`✨ 神の加護！最下位の${currentPlayerObj.name}に奇跡が起きました！ ✨`);
-
-      // 3秒後に演出用要素を削除
-      setTimeout(() => {
-        overlay.remove();
-        document.body.style.animation = "";
-      }, 3000);
     }
   }
 
@@ -1403,46 +1633,6 @@ document.addEventListener('keydown', (event) => {
     }
   }
 });
-
-// === グラフ更新システム（縦向きバージョン） ===
-function updateMoneyGraph() {
-  const container = document.getElementById('graph-container');
-  if(!container) return; // コンテナがなければ何もしない
-  container.innerHTML = ''; 
-
-  // 最大値計算（グラフの天井を決める）
-  let maxMoney = 3000; // 最低でも3000を基準にする
-  players.forEach(p => {
-    if(p.total > maxMoney) maxMoney = p.total;
-  });
-
-  players.forEach(p => {
-    // 高さ計算（%）
-    let percent = 0;
-    if(p.total > 0) percent = (p.total / maxMoney) * 100;
-    
-    // 数字の色（借金なら赤、それ以外は濃いグレー）
-    const valColor = p.total < 0 ? '#ff3131' : '#333';
-    
-    // プレイヤー名（長い場合は短縮。例: "Player 1" → "P1"）
-    // そのまま出したい場合は p.name を使ってください
-    const shortName = p.name.replace('Player ', 'P'); 
-
-    // 縦グラフ用のHTMLを作成
-    const col = document.createElement('div');
-    col.className = 'graph-col';
-    
-    col.innerHTML = `
-      <div class="graph-val" style="color:${valColor}">$${p.total.toLocaleString()}</div>
-      <div class="graph-bar-area">
-        <div class="graph-bar" style="height:${percent}%; background:${p.color};"></div>
-      </div>
-      <div class="graph-name" style="color:${p.color}">${shortName}</div>
-    `;
-    container.appendChild(col);
-  });
-}
-
 </script>
 </body>
 </html>
