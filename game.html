@@ -1247,7 +1247,7 @@ function endTurn() {
     );
 
     // テスト用に確率を変えたい場合はここを調整 (例: 0.03 -> 1.0)
-    if (Math.random() < 0.1 && currentPlayerObj === lowestPlayer) {
+    if (Math.random() < 0.03 && currentPlayerObj === lowestPlayer) {
       saveState();
 
       // --- 1. クイズデータの定義（10択・激ムズ30問） ---
@@ -1633,6 +1633,86 @@ document.addEventListener('keydown', (event) => {
     }
   }
 });
+</script>
+<div id="FINAL-EVENT-OVERLAY" style="
+    display: none; 
+    position: fixed; 
+    top: 0; left: 0; 
+    width: 100vw; height: 100vh; 
+    background: rgba(0,0,0,0.96); 
+    z-index: 2000000; /* 他のどの画面よりも絶対に上 */
+    flex-direction: column;
+    align-items: center; 
+    justify-content: center; 
+    color: white;
+    font-family: 'Arial Black', sans-serif;
+    text-align: center;
+    backdrop-filter: blur(15px);
+">
+    <div style="
+        font-size: 40px; 
+        color: #ffde59; 
+        margin-bottom: 30px; 
+        text-shadow: 0 0 20px #ffde59;
+        font-weight: 900;
+        letter-spacing: 10px;
+    ">
+        ⚠️ EVENT ⚠️
+    </div>
+    
+    <div id="FINAL-EVENT-TEXT" style="
+        font-size: 70px; /* 文字サイズを圧倒的に大きく */
+        font-weight: 900; 
+        line-height: 1.2; 
+        max-width: 90%; 
+        margin-bottom: 60px;
+        text-shadow: 5px 5px 0px #ff3131;
+        word-break: break-all;
+    ">
+        イベント内容がここに表示されます
+    </div>
+
+    <button onclick="document.getElementById('FINAL-EVENT-OVERLAY').style.display='none'" style="
+        padding: 30px 100px;
+        font-size: 40px;
+        font-weight: 900;
+        background: #ffde59;
+        color: black;
+        border: none;
+        border-radius: 50px;
+        cursor: pointer;
+        box-shadow: 0 10px 0 #b27b00;
+    ">
+        了解！
+    </button>
+</div>
+
+<script>
+// ここが重要：既存の showEventCard を「強制上書き（Override）」します
+// これにより、プログラムのどこから呼び出されてもこの巨大画面が表示されます。
+window.showEventCard = function(msg) {
+    console.log("強制巨大イベント表示: " + msg);
+
+    const overlay = document.getElementById('FINAL-EVENT-OVERLAY');
+    const textBox = document.getElementById('FINAL-EVENT-TEXT');
+
+    if (overlay && textBox) {
+        textBox.innerText = msg;
+        overlay.style.display = 'flex';
+        
+        // 演出：画面を一瞬白く光らせる
+        document.body.style.backgroundColor = "white";
+        setTimeout(() => {
+            document.body.style.backgroundColor = "";
+        }, 100);
+    }
+    
+    // 従来の小さなカード（もしあれば）も裏で一応動かしておく
+    const oldCard = document.getElementById('event-card');
+    const oldText = document.getElementById('event-text');
+    if (oldText) oldText.innerText = msg;
+    if (oldCard) oldCard.classList.remove('hidden');
+};
 </script>
 </body>
 </html>
